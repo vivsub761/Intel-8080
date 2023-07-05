@@ -3,11 +3,21 @@
 #include <time.h>
 #include <stdlib.h>
 #include <stdbool.h>
+
 typedef enum {
     RUNNING,
     PAUSED,
     IDLE
 } state;
+
+typedef struct {
+    u_int8_t zero;
+    u_int8_t sign;
+    u_int8_t parity;
+    u_int8_t carry;
+    u_int8_t auxCarry;
+    u_int8_t interrupt_enabled;
+} flags;
 
 typedef struct {
     u_int8_t a;
@@ -25,14 +35,8 @@ typedef struct {
     state state;
     flags* flags;
 } Chip;
-typedef struct {
-    u_int8_t zero: 0;
-    u_int8_t sign: 0;
-    u_int8_t parity: 0;
-    u_int8_t carry: 0;
-    u_int8_t auxCarry: 0;
-    u_int8_t interrupt_enabled: 0;
-} flags;
+
+
 
 
 

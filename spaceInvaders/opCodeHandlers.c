@@ -33,7 +33,7 @@ void handle0x03(Chip* chip, u_int8_t* op) {
 // INR B
 // increment B register
 void handle0x04(Chip* chip, u_int8_t* op) {
-    prinf("INR B: INCREMENT B REGISTER TO 0x%04X", chip->b + 1);
+    printf("INR B: INCREMENT B REGISTER TO 0x%04X", chip->b + 1);
     u_int16_t carryCheck = chip->b + 1;
     chip->b += 1;
     setFlags8Bits(chip, chip->b);
@@ -41,7 +41,7 @@ void handle0x04(Chip* chip, u_int8_t* op) {
 // DCR B
 // decrement B register
 void handle0x05(Chip* chip, u_int8_t* op) {
-    prinf("DCR B: DECREMENT B REGISTER TO 0x%04X", chip->b - 1);
+    printf("DCR B: DECREMENT B REGISTER TO 0x%04X", chip->b - 1);
     chip->b -= 1;
     setFlags8Bits(chip, chip->b);
 }
@@ -155,7 +155,7 @@ void handle0x13(Chip* chip, u_int8_t* op) {
 // INR D
 // increment D register
 void handle0x14(Chip* chip, u_int8_t* op) {
-    prinf("INR D: INCREMENT D REGISTER TO 0x%04X", chip->d + 1);
+    printf("INR D: INCREMENT D REGISTER TO 0x%04X", chip->d + 1);
     chip->d += 1;
     setFlags8Bits(chip, chip->d);
 }
@@ -163,7 +163,7 @@ void handle0x14(Chip* chip, u_int8_t* op) {
 // DCR D
 // decrement D register
 void handle0x15(Chip* chip, u_int8_t* op) {
-    prinf("DCR D: DECREMENT D REGISTER TO 0x%04X", chip->d - 1);
+    printf("DCR D: DECREMENT D REGISTER TO 0x%04X", chip->d - 1);
     chip->d -= 1;
     setFlags8Bits(chip, chip->d);
 }
@@ -280,7 +280,7 @@ void handle0x23(Chip* chip, u_int8_t* op) {
 // INR H
 // increment H register
 void handle0x24(Chip* chip, u_int8_t* op) {
-    prinf("INR H: INCREMENT H REGISTER TO 0x%04X", chip->h + 1);
+    printf("INR H: INCREMENT H REGISTER TO 0x%04X", chip->h + 1);
     chip->h += 1;
     setFlags8Bits(chip, chip->h);
 }
@@ -288,7 +288,7 @@ void handle0x24(Chip* chip, u_int8_t* op) {
 // DCR H
 // decrement H register
 void handle0x25(Chip* chip, u_int8_t* op) {
-    prinf("DCR H: DECREMENT H REGISTER TO 0x%04X", chip->h - 1);
+    printf("DCR H: DECREMENT H REGISTER TO 0x%04X", chip->h - 1);
     chip->h -= 1;
     setFlags8Bits(chip, chip->h);
 }
@@ -349,7 +349,7 @@ void handle0x2c(Chip* chip, u_int8_t* op) {
 // DCR L
 // decrement L register
 void handle0x2d(Chip* chip, u_int8_t* op) {
-    prinf("DCR L: DECREMENT L REGISTER TO 0x%04X", chip->l - 1);
+    printf("DCR L: DECREMENT L REGISTER TO 0x%04X", chip->l - 1);
     chip->l -= 1;
     setFlags8Bits(chip, chip->l);
 }

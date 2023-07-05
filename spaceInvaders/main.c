@@ -46,7 +46,8 @@ void emulate(Chip* chip) {
 void eventHandler(Chip* chip) {
 
 }
-
+const int width = 64;
+const int height = 32;
 sdl* InitializeSDL() {
 	sdl* sdl = malloc(sizeof(sdl));
 	SDL_Init( SDL_INIT_EVERYTHING );
@@ -64,8 +65,7 @@ sdl* InitializeSDL() {
 }
 
 
-const int width = 64;
-const int height = 32;
+
 int main (int argc, char**argv) {
     Chip* chip = InitializeChip();
 	if (!readFileIntoChip("invaders.h", chip, 0) || !readFileIntoChip("invaders.g", chip, 0x800) 
@@ -73,7 +73,7 @@ int main (int argc, char**argv) {
 		printf("Unable to Read Space invaders file into chip");
 		return 0;
 	}
-	InitalizeOpCodeTable();
+	InitializeOpCodeTable();
 	sdl* sdl = InitializeSDL();
 
 	while (chip->state != IDLE) {
