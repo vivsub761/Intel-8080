@@ -149,7 +149,7 @@ void handle0x12(Chip* chip, u_int8_t* op) {
 void handle0x13(Chip* chip, u_int8_t* op) {
     u_int16_t de = getDE(chip) + 1;
     printf("INX D: INCREMENT DE RESIGER PAIR TO 0x%04X", de);
-    setBandCtoBC(chip, de);
+    setDandEtoDE(chip, de);
 }
 
 // INR D
@@ -502,6 +502,7 @@ void handle0xc2(Chip* chip, u_int8_t* op) {
 void handle0xc3(Chip* chip, u_int8_t* op) {
     chip->pc = (op[2] << 8) | op[1];
     printf("JMP a16: JUMP TO ADDRESS 0x%04X", chip->pc);
+    chip->pc -= 1;
 }
 
 // PUSH B
@@ -534,6 +535,7 @@ void handle0xcd(Chip* chip, u_int8_t* op) {
     chip->pc = (op[2] << 8) | op[1];
     chip->sp -= 2;
     printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
+    chip->pc -= 1;
 }
 
 // POP D
@@ -593,12 +595,23 @@ void handle0xeb(Chip* chip, u_int8_t* op) {
 void handle0xf1(Chip* chip, u_int8_t* op) {
     u_int8_t psw = chip->mem[chip->sp];
     chip->a = chip->mem[chip->sp + 1];
-    
+    chip->flags->carry = (0x05 == (psw & 0x08));
+    chip->flags->parity = (0x04 == (psw & 0x04));
+    chip->flags->sign = (0x02 == (psw & 0x02));
+    chip->flags->zero = (0x01 == (psw & 0x01));
     chip->sp += 2;
 }
 
 void handle0xf5(Chip* chip, u_int8_t* op) {
-    
+    chip->mem[chip->sp - 1] = chip->a;
+    u_int8_t psw = 2;
+    psw |= chip->flags->carry;
+    psw |= (chip->flags->parity << 2);
+    psw |= (chip->flags->auxCarry << 4);
+    psw |= (chip->flags->zero << 6);
+    psw |= (chip->flags->sign << 7);
+    chip->mem[chip->sp - 2] = psw;
+    chip->sp -= 2;
 }
 
 void handle0xfb(Chip* chip, u_int8_t* op) {
@@ -609,7 +622,7 @@ void handle0xfb(Chip* chip, u_int8_t* op) {
 // CPI d8
 void handle0xfe(Chip* chip, u_int8_t* op) {
     u_int8_t res = chip->a - op[1];
-    chip->flags->carry = res >= 0;
+    chip->flags->carry = 0;
     setFlags8Bits(chip, res);
     chip->pc += 1;
     printf("SUBTRACT IMMEDIATE FROM REGISTER A(0x%04X) AND USE RESULT TO SET FLAGS", res);
