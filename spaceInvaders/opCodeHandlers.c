@@ -57,9 +57,9 @@ void handle0x06(Chip* chip, u_int8_t* op) {
 void handle0x07(Chip* chip, u_int8_t* op) {
     
     u_int8_t leftMostBit = chip->a >> 7;
-    chip->flags->carry = leftMostBit;
+    chip->flags.carry = leftMostBit;
     chip->a = (chip->a << 1) | leftMostBit;
-    printf("RLC: SHIFT REGISTER A LEFT ONE BIT. PREVIOUS LEFTMOST BIT PUT IN CARRY FLAG, Leftmost BIt put in rightmost bit, CARRY FLAG: 0x%04X, A RESGISTER: 0x%04X", chip->flags->carry, chip->a);
+    printf("RLC: SHIFT REGISTER A LEFT ONE BIT. PREVIOUS LEFTMOST BIT PUT IN CARRY FLAG, Leftmost BIt put in rightmost bit, CARRY FLAG: 0x%04X, A RESGISTER: 0x%04X", chip->flags.carry, chip->a);
 
 }
 
@@ -75,7 +75,7 @@ void handle0x09(Chip* chip, u_int8_t* op) {
     u_int16_t res = hl + bc;
     setHandLtoHL(chip, res);
     printf("DAD B: The value of the HL register pair: 0x%04X is added to the value of the BC Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, bc, res);
-    chip->flags->carry = carryCheck > (pow(2, 16) - 1);
+    chip->flags.carry = carryCheck > (pow(2, 16) - 1);
 }
 // LDAX B
 // Load memory at address stored in BC register into A register
@@ -120,9 +120,9 @@ void handle0x0e(Chip* chip, u_int8_t* op) {
 // Rightmost bit of Register A put into carry flag
 // register A shifted one bit to right, prevous carry flag put in leftmost bit
 void handle0x0f(Chip* chip, u_int8_t* op) {
-    chip->flags->carry = chip->a & 1;
-    chip->a = (chip->a >> 1) | (chip->flags->carry << 7);
-    printf("RRC: SHIFT REGISTER A RIGHT ONE BIT. PREVIOUS RIGHTMOST BIT PUT IN CARRY FLAG, prev Rightmost bit PUT IN LEFTMOST BIT OF A REGISTER, CARRY FLAG: 0x%04X, A RESGISTER: 0x%04X", chip->flags->carry, chip->a);
+    chip->flags.carry = chip->a & 1;
+    chip->a = (chip->a >> 1) | (chip->flags.carry << 7);
+    printf("RRC: SHIFT REGISTER A RIGHT ONE BIT. PREVIOUS RIGHTMOST BIT PUT IN CARRY FLAG, prev Rightmost bit PUT IN LEFTMOST BIT OF A REGISTER, CARRY FLAG: 0x%04X, A RESGISTER: 0x%04X", chip->flags.carry, chip->a);
 }
 // NOP
 void handle0x10(Chip* chip, u_int8_t* op) {
@@ -177,10 +177,10 @@ void handle0x16(Chip* chip, u_int8_t* op) {
 }
 // RAL
 void handle0x17(Chip* chip, u_int8_t* op) {
-    u_int8_t carryFlag = chip->flags->carry;
-    chip->flags->carry = chip->a >> 7;
+    u_int8_t carryFlag = chip->flags.carry;
+    chip->flags.carry = chip->a >> 7;
     chip->a = (chip->a << 1) | carryFlag;
-    printf("RLC: SHIFT REGISTER A LEFT ONE BIT. PREVIOUS LEFTMOST BIT PUT IN CARRY FLAG, Previous carry bit put in rightmost bit, CARRY FLAG: 0x%04X, A RESGISTER: 0x%04X", chip->flags->carry, chip->a);
+    printf("RLC: SHIFT REGISTER A LEFT ONE BIT. PREVIOUS LEFTMOST BIT PUT IN CARRY FLAG, Previous carry bit put in rightmost bit, CARRY FLAG: 0x%04X, A RESGISTER: 0x%04X", chip->flags.carry, chip->a);
 }
 
 void handle0x18(Chip* chip, u_int8_t* op) {
@@ -196,7 +196,7 @@ void handle0x19(Chip* chip, u_int8_t* op) {
     u_int16_t res = hl + de;
     setHandLtoHL(chip, res);
     printf("DAD D: The value of the HL register pair: 0x%04X is added to the value of the DE Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, de, res);
-    chip->flags->carry = carryCheck > (pow(2, 16) - 1);
+    chip->flags.carry = carryCheck > (pow(2, 16) - 1);
 }
 
 // LDAX D
@@ -241,10 +241,10 @@ void handle0x1e(Chip* chip, u_int8_t* op) {
 }
 // RAR
 void handle0x1f(Chip* chip, u_int8_t* op) {
-    u_int8_t carryFlag = chip->flags->carry;
-    chip->flags->carry = chip->a & 1;
+    u_int8_t carryFlag = chip->flags.carry;
+    chip->flags.carry = chip->a & 1;
     chip->a = (chip->a >> 1) | (carryFlag << 7);
-    printf("SHIFT REGISTER A ONE BIT TO THE RIGHT, PREV RIGHTMOST BIT PUT INTO CARRY FLAG, PREV CARRY FLAG PUT INTO LEFTMOST BIT. Register A: 0x%04X, Carry FLAG: 0x%04X ", chip->a, chip->flags->carry);
+    printf("SHIFT REGISTER A ONE BIT TO THE RIGHT, PREV RIGHTMOST BIT PUT INTO CARRY FLAG, PREV CARRY FLAG PUT INTO LEFTMOST BIT. Register A: 0x%04X, Carry FLAG: 0x%04X ", chip->a, chip->flags.carry);
 }
 // NOP
 void handle0x20(Chip* chip, u_int8_t* op) {
@@ -318,7 +318,7 @@ void handle0x29(Chip* chip, u_int8_t* op) {
     u_int16_t res = hl + hl;
     setHandLtoHL(chip, res);
     printf("DAD H: The value of the HL register pair: 0x%04X is added to itself and the result 0x%04X is put into the HL register pair", hl, res);
-    chip->flags->carry = carryCheck > (pow(2, 16) - 1);
+    chip->flags.carry = carryCheck > (pow(2, 16) - 1);
 }
 
 // LHLD a16
@@ -470,7 +470,7 @@ void handle0xa7(Chip* chip, u_int8_t* op) {
     chip->a &= chip->a;
     printf("ANA A: SETS REGISTER A TO A LOGICAL AND A = A & A (0x%04X)", chip->a);
     setFlags8Bits(chip, chip->a);
-    chip->flags->carry = 0;
+    chip->flags.carry = 0;
 }
 
 // XRA A
@@ -478,7 +478,7 @@ void handle0xaf(Chip* chip, u_int8_t* op) {
     chip->a ^= chip->a;
     printf("XRA A: SETS REGISTER A To  A = A ^ A (0x%04X)", chip->a);
     setFlags8Bits(chip, chip->a);
-    chip->flags->carry = 0;
+    chip->flags.carry = 0;
 }
 // POP B
 void handle0xc1(Chip* chip, u_int8_t* op) {
@@ -489,9 +489,10 @@ void handle0xc1(Chip* chip, u_int8_t* op) {
 }
 // JNZ a16
 void handle0xc2(Chip* chip, u_int8_t* op) {
-    if (chip->flags->zero == 0) {
+    if (chip->flags.zero == 0) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JNZ a16: SINCE THE ZERO FLAG IS NOT SET, we jump to address: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JNZ a16: ZERO FLAG IS SET, NO JUMP");
         chip->pc += 2;
@@ -519,7 +520,7 @@ void handle0xc6(Chip* chip, u_int8_t* op) {
     printf("ADI D8: ADD IMMEDIATE 0x%04X to Register A to get", chip->a);
     chip->pc += 1;
     setFlags8Bits(chip, chip->a);
-    chip->flags->carry = carryCheck > (pow(2, 8) - 1);
+    chip->flags.carry = carryCheck > (pow(2, 8) - 1);
 }
 // RET
 void handle0xc9(Chip* chip, u_int8_t* op) {
@@ -576,7 +577,7 @@ void handle0xe5(Chip* chip, u_int8_t* op) {
 // ANI d8
 void handle0xe6(Chip* chip, u_int8_t* op) {
     chip->a &= op[1];
-    chip->flags->carry = 0;
+    chip->flags.carry = 0;
     setFlags8Bits(chip, chip->a);
     printf("ANI d8: A = A & immediate(0x%04X)", chip->a);
 }
@@ -595,34 +596,34 @@ void handle0xeb(Chip* chip, u_int8_t* op) {
 void handle0xf1(Chip* chip, u_int8_t* op) {
     u_int8_t psw = chip->mem[chip->sp];
     chip->a = chip->mem[chip->sp + 1];
-    chip->flags->carry = (0x05 == (psw & 0x08));
-    chip->flags->parity = (0x04 == (psw & 0x04));
-    chip->flags->sign = (0x02 == (psw & 0x02));
-    chip->flags->zero = (0x01 == (psw & 0x01));
+    chip->flags.carry = (0x05 == (psw & 0x08));
+    chip->flags.parity = (0x04 == (psw & 0x04));
+    chip->flags.sign = (0x02 == (psw & 0x02));
+    chip->flags.zero = (0x01 == (psw & 0x01));
     chip->sp += 2;
 }
 
 void handle0xf5(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 1] = chip->a;
     u_int8_t psw = 2;
-    psw |= chip->flags->carry;
-    psw |= (chip->flags->parity << 2);
-    psw |= (chip->flags->auxCarry << 4);
-    psw |= (chip->flags->zero << 6);
-    psw |= (chip->flags->sign << 7);
+    psw |= chip->flags.carry;
+    psw |= (chip->flags.parity << 2);
+    psw |= (chip->flags.auxCarry << 4);
+    psw |= (chip->flags.zero << 6);
+    psw |= (chip->flags.sign << 7);
     chip->mem[chip->sp - 2] = psw;
     chip->sp -= 2;
 }
 
 void handle0xfb(Chip* chip, u_int8_t* op) {
-    chip->flags->interrupt_enabled = 1;
+    chip->flags.interrupt_enabled = 1;
     printf("INTERRUPT ENABLE FlAG SET TO 1");
 }
 
 // CPI d8
 void handle0xfe(Chip* chip, u_int8_t* op) {
     u_int8_t res = chip->a - op[1];
-    chip->flags->carry = 0;
+    chip->flags.carry = 0;
     setFlags8Bits(chip, res);
     chip->pc += 1;
     printf("SUBTRACT IMMEDIATE FROM REGISTER A(0x%04X) AND USE RESULT TO SET FLAGS", res);

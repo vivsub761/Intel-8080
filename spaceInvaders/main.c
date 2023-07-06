@@ -148,7 +148,9 @@ int main (int argc, char**argv) {
 	// }
 	// printf("OPCODE AT 0x18D7: 0x%02X\n", chip->mem[0x18D7]);
 	for (int i = 0; i < 20; i++) {
-		u_int8_t* op = &chip->mem[chip->pc];
+		u_int8_t* kms = chip->mem + chip->pc;
+		u_int8_t* op = chip->mem + chip->pc;
+		// printf("OPPITY BOPPITY: 0x%04X", op[0]);
 		printf("PC: 0x%04X, ", chip->pc);
 		printf("OPCODE: 0x%02X: ", op[0]);
 		opCodeTable[op[0]](chip, op);
@@ -160,7 +162,7 @@ int main (int argc, char**argv) {
 		printf("E: 0x%04X\n", chip->e);
 		printf("H: 0x%04X\n", chip->h);
 		printf("L: 0x%04X\n", chip->l);
-
+		// 0x20009A42
 		
 		chip->pc += 1;
 	}

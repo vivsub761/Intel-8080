@@ -10,7 +10,7 @@ typedef enum {
     IDLE
 } state;
 
-typedef struct {
+typedef struct flags {
     u_int8_t zero;
     u_int8_t sign;
     u_int8_t parity;
@@ -33,7 +33,7 @@ typedef struct {
     u_int8_t enable;
     u_int8_t zpad: 3;
     state state;
-    flags* flags;
+    struct flags flags;
 } Chip;
 
 
