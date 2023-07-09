@@ -1,9 +1,12 @@
-#include <stdio.h>
 #include "SDL.h"
 #include <time.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <stdbool.h>
+#include "ioDevices.h"
 
+#ifndef MAIN_H
+#define MAIN_H
 typedef enum {
     RUNNING,
     PAUSED,
@@ -34,8 +37,8 @@ typedef struct {
     u_int8_t zpad: 3;
     state state;
     struct flags flags;
+    ioDevices* devices;
 } Chip;
-
 
 
 
@@ -44,4 +47,4 @@ typedef struct {
     SDL_Renderer* renderer;
     SDL_Window* window;
 } sdl;
-
+#endif

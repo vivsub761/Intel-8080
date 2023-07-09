@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include "opCodeHandlers.c"
 #include "SDL.h"
+#include "ioDevices.h"
 
 
-static void (*opCodeTable[256])();
+static int (*opCodeTable[256])();
 
 void InitializeOpCodeTable() {
 	opCodeTable[0x00] = handle0x00;
@@ -101,13 +102,77 @@ bool readFileIntoChip(char* filePath, Chip* chip, int start) {
 }
 
 void emulate(Chip* chip) {
-    
-    
+    int cycles = 0;
+	while (cycles < 16666) {
+		u_int8_t* op = chip->mem + chip->pc;
+		cycles += opCodeTable[op[0]](chip, op);
+		printf("PC: 0x%04X, ", chip->pc);
+		printf("OPCODE: 0x%02X: ", op[0]);
+
+		printf("\n");
+		chip->pc += 1;
+		
+	}
 }
 
 void eventHandler(Chip* chip) {
+	SDL_Event windowEvent;
+	while (SDL_PollEvent(&windowEvent)) {
+		switch(windowEvent.type) {
+			case SDL_QUIT:
+                chip->state = IDLE;
+                return;
+			case SDL_KEYDOWN:
+				switch(windowEvent.key.keysym.sym) {
+					case SDLK_ESCAPE:
+						// stop emulation
+                        chip->state = IDLE;
+                        return;
+					case SDLK_p:
+						// PAUSE EMULATION
+						chip->state = chip->state == RUNNING ? PAUSED : RUNNING;
+					case SDLK_LEFT:
+						// move left, set 5th bit to 1
+						chip->devices->read1 |= 0b00100000;
+					case SDLK_RIGHT:
+						// move right, set 6th bit to 1
+						chip->devices->read1 |= 0b01000000;
+					case SDLK_SPACE:
+						// shoot, set 4th bit to 1
+						chip->devices->read1 |= 0b00010000;
+					case SDLK_c:
+						// coin inserted, set 0th bit to 1
+						chip->devices->read1 |= 0b00000001;
+					case SDLK_RETURN:
+						// Player 1 Start, set 2nd bit to 1
+						chip->devices->read1 |= 0b00000100;
+					default:
+						break;
+				}
+			case SDL_KEYUP:
+				switch(windowEvent.key.keysym.sym) {
+					case SDLK_LEFT:
+						chip->devices->read1 &= 0b11011111; 
 
+					case SDLK_RIGHT:
+						chip->devices->read1 &= 0b10111111;
+					case SDLK_SPACE:
+						chip->devices->read1 &= 0b11101111;
+					case SDLK_c:
+						chip->devices->read1 &= 0x11111110;
+					case SDLK_RETURN:
+						chip->devices->read1 &= 0x11111011;
+					default:
+						break;
+				}
+				
+				
+			
+		}
+	}
 }
+
+
 const int width = 64;
 const int height = 32;
 sdl* InitializeSDL() {
@@ -127,9 +192,12 @@ sdl* InitializeSDL() {
 }
 
 
+void renderGraphics(Chip* chip) {
 
+}
 int main (int argc, char**argv) {
     Chip* chip = InitializeChip();
+	chip->devices = InitializeDevices();
 	if (!readFileIntoChip("invaders.h", chip, 0) || !readFileIntoChip("invaders.g", chip, 0x800) 
 		|| !readFileIntoChip("invaders.f", chip, 0x1000) || !readFileIntoChip("invaders.e", chip, 0x1800)) {
 		printf("Unable to Read Space invaders file into chip");
@@ -137,41 +205,44 @@ int main (int argc, char**argv) {
 	}
 	InitializeOpCodeTable();
 	sdl* sdl = InitializeSDL();
-
-	// u_int8_t* op = chip->mem + chip->pc;
-	// printf("PC: 0x%04X, ", chip->pc);
-	// printf("OPCODE: 0x%04X: ", op[0]);
-	// opCodeTable[op[0]](chip, op);
-	// printf("\n");
-	// for (int i = 0; i < 0x800; i++) {
-	// 	printf("0x%04X\n", chip->mem[i]);
-	// }
-	// printf("OPCODE AT 0x18D7: 0x%02X\n", chip->mem[0x18D7]);
-	for (int i = 0; i < 20; i++) {
-		u_int8_t* kms = chip->mem + chip->pc;
+	int i = 1;
+	SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
+    SDL_RenderClear(sdl->renderer);
+	while (chip->state != IDLE) {
+		eventHandler(chip);
+		if (chip->state == PAUSED) {
+			continue;
+		}
 		u_int8_t* op = chip->mem + chip->pc;
-		// printf("OPPITY BOPPITY: 0x%04X", op[0]);
+		printf("INSTRUCTION NUMBER: %d \n", i++);
 		printf("PC: 0x%04X, ", chip->pc);
 		printf("OPCODE: 0x%02X: ", op[0]);
 		opCodeTable[op[0]](chip, op);
 		printf("\n");
-		printf("A: 0x%04X\n", chip->a);
-		printf("B: 0x%04X\n", chip->b);
-		printf("C: 0x%04X\n", chip->c);
-		printf("D: 0x%04X\n", chip->d);
-		printf("E: 0x%04X\n", chip->e);
-		printf("H: 0x%04X\n", chip->h);
-		printf("L: 0x%04X\n", chip->l);
-		// 0x20009A42
-		
 		chip->pc += 1;
 	}
-	// printf("OPCODE AT 0x18D7: 0x%02X", chip->mem[0x18D7]);
-	// while (chip->state != IDLE) {
+
+	// for (int i = 1; i < 50000; i++) {
 	// 	u_int8_t* op = chip->mem + chip->pc;
+	// 	printf("INSTRUCTION NUMBER: %d \n", i);
+	// 	printf("PC: 0x%04X, ", chip->pc);
+	// 	printf("OPCODE: 0x%02X: ", op[0]);
 	// 	opCodeTable[op[0]](chip, op);
+	// 	printf("\n");
+		// printf("A: 0x%04X\n", chip->a);
+		// printf("B: 0x%04X\n", chip->b);
+		// printf("C: 0x%04X\n", chip->c);
+		// printf("D: 0x%04X\n", chip->d);
+		// printf("E: 0x%04X\n", chip->e);
+		// printf("H: 0x%04X\n", chip->h);
+		// printf("L: 0x%04X\n", chip->l);
+		// printf("CARRY FLAG: 0x%04X\n", chip->flags.carry);
+		// printf("SIGN FLAG: 0x%04X\n", chip->flags.sign);
+		// printf("PARITY FLAG: 0x%04X\n", chip->flags.parity);
+		// printf("ZERO FLAG: 0x%04X\n", chip->flags.zero);
+
+
 	// 	chip->pc += 1;
-	// 	// Run emulation
 	// }
 
 	// cleanup program
