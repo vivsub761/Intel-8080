@@ -601,7 +601,7 @@ int handle0xc9(Chip* chip, u_int8_t* op) {
 }
 // CALL
 int handle0xcd(Chip* chip, u_int8_t* op) {
-    u_int16_t saveOnStack = chip->pc + 2;
+    u_int16_t saveOnStack = chip->pc + 3;
     chip->mem[chip->sp - 1] = saveOnStack >> 8;
     chip->mem[chip->sp - 2] = saveOnStack & 0x00ff;
     chip->pc = (op[2] << 8) | op[1];
@@ -609,6 +609,13 @@ int handle0xcd(Chip* chip, u_int8_t* op) {
     printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
     chip->pc -= 1;
     return 17;
+}
+
+// RST 1
+int handle0xcf(Chip* chip, u_int8_t* op) {
+    chip->mem[chip->sp - 1] = chip->pc >> 8;
+    chip->mem[chip->sp - 2] = chip->pc & 0x00ff;
+    chip->pc = 8;
 }
 
 // POP D
@@ -636,6 +643,16 @@ int handle0xd5(Chip* chip, u_int8_t* op) {
     chip->sp -= 2;
     return 11;
 }
+
+// RST 2
+int handle0xd7(Chip* chip, u_int8_t* op) {
+    chip->mem[chip->sp - 1] = chip->pc >> 8;
+    chip->mem[chip->sp - 2] = chip->pc & 0x00ff;
+    chip->sp -= 2;
+    chip->pc = 16;
+    return 11;
+}
+
 // IN
 int handle0xdb(Chip* chip, u_int8_t* op) {
     deviceIn(chip, op[1]);

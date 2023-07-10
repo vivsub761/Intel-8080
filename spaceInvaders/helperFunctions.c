@@ -36,13 +36,13 @@ bool evenOneBits(int num) {
     return parity;
 }
 void setFlags8Bits(Chip* chip, u_int8_t res) {
-    chip->flags->sign = (res >> 7);
-    chip->flags->zero = (res == 0);
-    chip->flags->parity = evenOneBits(res);
+    chip->flags.sign = (res >> 7);
+    chip->flags.zero = (res == 0);
+    chip->flags.parity = evenOneBits(res);
 }
 
 void setFlags16Bits(Chip* chip, u_int16_t res) {
-    chip->flags->sign = (res >> 15);
-    chip->flags->zero = (res == 0);
-    chip->flags->parity = evenOneBits(res);
+    chip->flags.sign = (res >> 15);
+    chip->flags.zero = (res == 0);
+    chip->flags.parity = evenOneBits(res);
 }

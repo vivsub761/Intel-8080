@@ -2,6 +2,7 @@
 #include "opCodeHandlers.c"
 #include "SDL.h"
 #include "ioDevices.h"
+#include <time.h>
 
 
 static int (*opCodeTable[256])();
@@ -56,6 +57,7 @@ void InitializeOpCodeTable() {
 	opCodeTable[0xcd] = handle0xcd;
 	opCodeTable[0xd1] = handle0xd1;
 	opCodeTable[0xd3] = handle0xd3;
+	opCodeTable[0xd7] = handle0xd7;
 	opCodeTable[0xd5] = handle0xd5;
 	opCodeTable[0xe1] = handle0xe1;
 	opCodeTable[0xe5] = handle0xe5;
@@ -91,7 +93,6 @@ bool readFileIntoChip(char* filePath, Chip* chip, int start) {
 	fseek(file, 0, SEEK_END);
 	size_t fileSize = ftell(file);
 	rewind(file);
-	// printf("FILESIZE: %d\n", fileSize);
 	int bytesRead = fread(&chip->mem[start], 1, fileSize, file);
 	if (bytesRead != fileSize) {
 		printf("Could not read the file fully\n");
@@ -100,18 +101,31 @@ bool readFileIntoChip(char* filePath, Chip* chip, int start) {
 	fclose(file);
 	return true;
 }
+float interrupt(Chip* chip, u_int8_t* op, u_int8_t opCode) {
+	if (chip->flags.interrupt_enabled == 1) {
+		chip->flags.interrupt_enabled = 0;
+		opCodeTable[opCode](chip, op);
+		chip->pc -= 1;
+		return time(NULL);
+	}
+	return -1;
+
+}
 
 void emulate(Chip* chip) {
     int cycles = 0;
+	float lastInterrupt = 0;
 	while (cycles < 16666) {
 		u_int8_t* op = chip->mem + chip->pc;
 		cycles += opCodeTable[op[0]](chip, op);
-		printf("PC: 0x%04X, ", chip->pc);
-		printf("OPCODE: 0x%02X: ", op[0]);
-
+		// printf("PC: 0x%04X, ", chip->pc);
+		// printf("OPCODE: 0x%02X: ", op[0]);
+		if (time(NULL) - lastInterrupt > 1.0/60.0) {
+			float timing = interrupt(chip, op, 0xd7);
+			lastInterrupt = timing == -1 ? lastInterrupt : timing;
+		}
 		printf("\n");
 		chip->pc += 1;
-		
 	}
 }
 
@@ -192,9 +206,11 @@ sdl* InitializeSDL() {
 }
 
 
-void renderGraphics(Chip* chip) {
+void renderGraphics(Chip* chip, sdl* sdl) {
 
 }
+
+
 int main (int argc, char**argv) {
     Chip* chip = InitializeChip();
 	chip->devices = InitializeDevices();
@@ -213,13 +229,16 @@ int main (int argc, char**argv) {
 		if (chip->state == PAUSED) {
 			continue;
 		}
-		u_int8_t* op = chip->mem + chip->pc;
-		printf("INSTRUCTION NUMBER: %d \n", i++);
-		printf("PC: 0x%04X, ", chip->pc);
-		printf("OPCODE: 0x%02X: ", op[0]);
-		opCodeTable[op[0]](chip, op);
-		printf("\n");
-		chip->pc += 1;
+		// Emulate the appropriate amount of instructions
+		// u_int8_t* op = chip->mem + chip->pc;
+		// printf("INSTRUCTION NUMBER: %d \n", i++);
+		// printf("PC: 0x%04X, ", chip->pc);
+		// printf("OPCODE: 0x%02X: ", op[0]);
+		// opCodeTable[op[0]](chip, op);
+		// printf("\n");
+		// chip->pc += 1;
+		emulate(chip);
+		renderGraphics(chip, sdl);
 	}
 
 	// for (int i = 1; i < 50000; i++) {
