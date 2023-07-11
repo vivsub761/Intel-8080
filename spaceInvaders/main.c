@@ -115,11 +115,12 @@ float interrupt(Chip* chip, u_int8_t* op, u_int8_t opCode) {
 void emulate(Chip* chip) {
     int cycles = 0;
 	float lastInterrupt = 0;
-	while (cycles < 16666) {
+	while (cycles < 33332) {
 		u_int8_t* op = chip->mem + chip->pc;
-		cycles += opCodeTable[op[0]](chip, op);
 		// printf("PC: 0x%04X, ", chip->pc);
 		// printf("OPCODE: 0x%02X: ", op[0]);
+		cycles += opCodeTable[op[0]](chip, op);
+		
 		if (time(NULL) - lastInterrupt > 1.0/60.0) {
 			float timing = interrupt(chip, op, 0xd7);
 			lastInterrupt = timing == -1 ? lastInterrupt : timing;
@@ -192,7 +193,7 @@ const int height = 32;
 sdl* InitializeSDL() {
 	sdl* sdl = malloc(sizeof(sdl));
 	SDL_Init( SDL_INIT_EVERYTHING );
-	sdl->window = SDL_CreateWindow("Space Invaders!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, width * 10, height * 10, SDL_WINDOW_ALLOW_HIGHDPI);
+	sdl->window = SDL_CreateWindow("Space Invaders!", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, 224, 256, 0);
 	if (sdl->window == NULL) {
         printf("COULD NOT CREATE WINDOW");
         return 0;
@@ -207,7 +208,7 @@ sdl* InitializeSDL() {
 
 
 void renderGraphics(Chip* chip, sdl* sdl) {
-
+	
 }
 
 
@@ -221,27 +222,35 @@ int main (int argc, char**argv) {
 	}
 	InitializeOpCodeTable();
 	sdl* sdl = InitializeSDL();
+	int summed = 0;
+	
+	// SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
+    // SDL_RenderClear(sdl->renderer);
 	int i = 1;
-	SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
-    SDL_RenderClear(sdl->renderer);
-	while (chip->state != IDLE) {
-		eventHandler(chip);
-		if (chip->state == PAUSED) {
-			continue;
-		}
-		// Emulate the appropriate amount of instructions
-		// u_int8_t* op = chip->mem + chip->pc;
-		// printf("INSTRUCTION NUMBER: %d \n", i++);
-		// printf("PC: 0x%04X, ", chip->pc);
-		// printf("OPCODE: 0x%02X: ", op[0]);
-		// opCodeTable[op[0]](chip, op);
-		// printf("\n");
-		// chip->pc += 1;
-		emulate(chip);
-		renderGraphics(chip, sdl);
-	}
-
-	// for (int i = 1; i < 50000; i++) {
+	// opCodeTable[0x02](chip, chip->mem + chip->pc);
+	// while (chip->state != IDLE) {
+	// 	eventHandler(chip);
+	// 	if (chip->state == PAUSED) {
+	// 		continue;
+			
+	// 	}
+	// 	u_int8_t* op = chip->mem + chip->pc;
+	// 	printf("INSTRUCTION NUMBER: %d \n", i++);
+	// 	printf("PC: 0x%04X, ", chip->pc);
+	// 	printf("OPCODE: 0x%02X: ", op[0]);
+	// 	opCodeTable[op[0]](chip, op);
+	// 	printf("\n");
+	// 	chip->pc += 1;
+	// 	emulate(chip);
+	// 	renderGraphics(chip, sdl);
+	// }
+	// printf("\n\nSUMMED BEFORE: %d\n\n", summed);
+	// int summed2 = 0;
+	// for (int i = 0x2400; i < 0x3fff + 1; i++) {
+	// 	summed2 += chip->mem[i];
+	// }
+	// printf("SUMMED AFTER: %d", summed2);
+	// for (int i = 1; i < 50; i++) {
 	// 	u_int8_t* op = chip->mem + chip->pc;
 	// 	printf("INSTRUCTION NUMBER: %d \n", i);
 	// 	printf("PC: 0x%04X, ", chip->pc);

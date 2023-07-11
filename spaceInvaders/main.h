@@ -32,7 +32,7 @@ typedef struct {
     u_int8_t l;
     u_int16_t sp;    
     u_int16_t pc; 
-    u_int8_t mem[0x10000];
+    u_int8_t mem[0x4000];
     u_int8_t zpad: 3;
     state state;
     struct flags flags;

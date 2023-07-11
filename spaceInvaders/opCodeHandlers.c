@@ -30,7 +30,7 @@ int handle0x02(Chip* chip, u_int8_t* op) {
 // increment BC register pair
 int handle0x03(Chip* chip, u_int8_t* op) {
     u_int16_t bc = getBC(chip) + 1;
-    printf("INX B: INCREMENT BC RESIGER PAIR TO 0x%04X", bc);
+    printf("INX B: INCREMENT BC REGISTER PAIR TO 0x%04X", bc);
     setBandCtoBC(chip, bc);
     return 5;
 
@@ -39,7 +39,6 @@ int handle0x03(Chip* chip, u_int8_t* op) {
 // increment B register
 int handle0x04(Chip* chip, u_int8_t* op) {
     printf("INR B: INCREMENT B REGISTER TO 0x%04X", chip->b + 1);
-    u_int16_t carryCheck = chip->b + 1;
     chip->b += 1;
     setFlags8Bits(chip, chip->b);
     return 5;
@@ -47,7 +46,7 @@ int handle0x04(Chip* chip, u_int8_t* op) {
 // DCR B
 // decrement B register
 int handle0x05(Chip* chip, u_int8_t* op) {
-    printf("DCR B: DECREMENT B REGISTER TO 0x%04X", chip->b - 1);
+    // printf("DCR B: DECREMENT B REGISTER TO 0x%04X", chip->b - 1);
     chip->b -= 1;
     setFlags8Bits(chip, chip->b);
     return 5;
@@ -55,7 +54,7 @@ int handle0x05(Chip* chip, u_int8_t* op) {
 // MVI B,d8
 // set register b to immediate
 int handle0x06(Chip* chip, u_int8_t* op) {
-    printf("MVI B,d8: SET REGSITER B TO 0x%04X", op[1]);
+    // printf("MVI B,d8: SET REGSITER B TO 0x%04X", op[1]);
     chip->b = op[1];
     chip->pc += 1;
     return 7;
@@ -83,7 +82,7 @@ int handle0x09(Chip* chip, u_int8_t* op) {
     u_int32_t carryCheck = hl + bc;
     u_int16_t res = hl + bc;
     setHandLtoHL(chip, res);
-    printf("DAD B: The value of the HL register pair: 0x%04X is added to the value of the BC Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, bc, res);
+    // printf("DAD B: The value of the HL register pair: 0x%04X is added to the value of the BC Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, bc, res);
     chip->flags.carry = carryCheck > (pow(2, 16) - 1);
     return 10;
 }
@@ -217,7 +216,7 @@ int handle0x18(Chip* chip, u_int8_t* op) {
 int handle0x19(Chip* chip, u_int8_t* op) {
     u_int16_t hl = getHL(chip);
     u_int16_t de = getDE(chip);
-    u_int32_t carryCheck = hl + de;
+    u_int32_t carryCheck = (u_int32_t) hl + (u_int32_t) de;
     u_int16_t res = hl + de;
     setHandLtoHL(chip, res);
     printf("DAD D: The value of the HL register pair: 0x%04X is added to the value of the DE Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, de, res);
@@ -237,8 +236,7 @@ int handle0x1a(Chip* chip, u_int8_t* op) {
 // decrement DE register pair
 // DCX D
 int handle0x1b(Chip* chip, u_int8_t* op) {
-    u_int16_t de = getDE(chip);
-    de -= 1;
+    u_int16_t de = getDE(chip) - 1;
     setBandCtoBC(chip, de);
     printf("DCX D: Decrement BC register pair to 0x%04X", getDE(chip));
     return 5;
@@ -290,7 +288,7 @@ int handle0x21(Chip* chip, u_int8_t* op) {
     chip->h = op[2];
     chip->l = op[1];
     chip->pc += 2;
-    printf("LXI H,d16: Load 16 bit immediate into HL register pair. Register H = 0x%04X, Register L = 0x%04X", op[2], op[1]);
+    // printf("LXI H,d16: Load 16 bit immediate into HL register pair. Register H = 0x%04X, Register L = 0x%04X", op[2], op[1]);
     return 10;
 }
 
@@ -340,7 +338,7 @@ int handle0x26(Chip* chip, u_int8_t* op) {
     return 7;
 }
 
-// DAA
+// DAD
 int handle0x27(Chip* chip, u_int8_t* op) {
     printf("DAD: STILL UNIMPLEMENTED");
     return 4;
@@ -355,7 +353,7 @@ int handle0x28(Chip* chip, u_int8_t* op) {
 // HL = HL + DE
 int handle0x29(Chip* chip, u_int8_t* op) {
     u_int16_t hl = getHL(chip);
-    u_int32_t carryCheck = hl + hl;
+    u_int32_t carryCheck = (u_int32_t) hl + (u_int32_t) hl;
     u_int16_t res = hl + hl;
     setHandLtoHL(chip, res);
     printf("DAD H: The value of the HL register pair: 0x%04X is added to itself and the result 0x%04X is put into the HL register pair", hl, res);
@@ -369,6 +367,7 @@ int handle0x2a(Chip* chip, u_int8_t* op) {
     chip->l = chip->mem[address];
     chip->h = chip->mem[address + 1];
     printf("REGISTER L: 0x%04X SET TO value at address 0x%04X, REGISTER H: 0x%04X SET TO value at address 0x%04X", chip->l, address, chip->h, address + 1);
+    chip->pc += 2;
     return 16;
 }   
 
@@ -410,7 +409,7 @@ int handle0x2e(Chip* chip, u_int8_t* op) {
 }
 // CMA
 int handle0x2f(Chip* chip, u_int8_t* op) {
-    chip->a = ~(chip->a);
+    chip->a = ~chip->a;
     printf("CMA: INVERT the bits in Register A: 0x%04X", chip->a);
     return 4;
 }
@@ -422,7 +421,7 @@ int handle0x30(Chip* chip, u_int8_t* op) {
 // LXI SP,d16
 int handle0x31(Chip* chip, u_int8_t* op) {
     chip->sp = (op[2] << 8) | op[1];
-    printf("LXI SP,d16: change stack pointer to immediate 0x%04X", chip->sp);
+    // printf("LXI SP,d16: change stack pointer to immediate 0x%04X", chip->sp);
     chip->pc += 2;
     return 10;
 }
@@ -434,6 +433,29 @@ int handle0x32(Chip* chip, u_int8_t* op) {
     chip->pc += 2;
     return 13;
 }
+
+// INX SP
+int handle0x33(Chip* chip, u_int8_t* op) {
+    chip->sp += 1;
+    printf("INCREMENT STACK POINTER TO 0x%04X", chip->sp);
+    return 5;
+}
+
+// INR M
+int handle0x34(Chip* chip, u_int8_t* op) {
+    u_int16_t address = getHL(chip);
+    chip->mem[address] += 1;
+    printf("INCREMENT MEMORY AT ADDRESS 0x%04X to get 0x%04X", address, chip->mem[address]);
+    setFlags8Bits(chip, chip->mem[address]);
+}
+// DCR M
+int handle0x35(Chip* chip, u_int8_t* op) {
+    u_int16_t address = getHL(chip);
+    chip->mem[address] -= 1;
+    printf("DECREMENT MEMORY AT ADDRESS 0x%04X to get 0x%04X", address, chip->mem[address]);
+    setFlags8Bits(chip, chip->mem[address]);
+}
+
 
 // MVI M,d8
 // Move the immediate to the address the HL pair points to 
@@ -458,7 +480,7 @@ int handle0x3a(Chip* chip, u_int8_t* op) {
 int handle0x3e(Chip* chip, u_int8_t* op) {
     chip->a = op[1];
     chip->pc += 1;
-    printf("MVI A, d8: Move immediate 0x%04X to Register A", op[1]);
+    // printf("MVI A, d8: Move immediate 0x%04X to Register A", op[1]);
     return 7;
 }
 // MOV D,M
@@ -475,6 +497,9 @@ int handle0x5e(Chip* chip, u_int8_t* op) {
     u_int16_t address = getHL(chip);
     chip->e = chip->mem[address];
     printf("MOV E,M: SET REGISTER E(0x%04X) to value at address 0x%04X", chip->e, address);
+    if (address >= 0x2400 && address <= 0x3fff) {
+        exit(1);
+    }
     return 7;
 }
 
@@ -484,12 +509,15 @@ int handle0x66(Chip* chip, u_int8_t* op) {
     u_int16_t address = getHL(chip);
     chip->h = chip->mem[address];
     printf("MOV H,M: SET REGISTER H(0x%04X) to value at address 0x%04X", chip->h, address);
+    if (address >= 0x2400 && address <= 0x3fff) {
+        exit(1);
+    }
     return 7;
 }
 // MOV L, A
 int handle0x6f(Chip* chip, u_int8_t* op) {
     chip->a = chip->l;
-    printf("MOV L, A: MOVE VALUE FROM REGISTER L(0x%04X) to register A",chip->a);
+    // printf("MOV L, A: MOVE VALUE FROM REGISTER L(0x%04X) to register A",chip->a);
     return 5;
 }
 // 	MOV M,A
@@ -497,27 +525,30 @@ int handle0x77(Chip* chip, u_int8_t* op) {
     u_int16_t address = getHL(chip);
     chip->mem[address] = chip->a;
     printf("MOV M, A: SET VALUE AT ADDRESS 0x%04X to register A: (0x%04X)", address, chip->a);
+    if (address >= 0x2400 && address <= 0x3fff) {
+        exit(1);
+    }
     return 7;
 }
 
 // MOV A, D
 int handle0x7a(Chip* chip, u_int8_t* op) {
     chip->a = chip->d;
-    printf("MOV A, D: MOVE VALUE 0x%04X from register D to register A", chip->d);
+    // printf("MOV A, D: MOVE VALUE 0x%04X from register D to register A", chip->d);
     return 5;
 }
 
 // MOV A, E
 int handle0x7b(Chip* chip, u_int8_t* op) {
     chip->a = chip->e;
-    printf("MOV A, E: MOVE VALUE 0x%04X from register E to register A", chip->e);
+    // printf("MOV A, E: MOVE VALUE 0x%04X from register E to register A", chip->e);
     return 5;
 }
 
 // MOV A, H
 int handle0x7c(Chip* chip, u_int8_t* op) {
     chip->a = chip->h;
-    printf("MOV A, H: MOVE VALUE 0x%04X from register H to register A", chip->h);
+    // printf("MOV A, H: MOVE VALUE 0x%04X from register H to register A", chip->h);
     return 5;
 }
 // MOV A, M
@@ -525,13 +556,16 @@ int handle0x7e(Chip* chip, u_int8_t* op) {
     u_int16_t address = getHL(chip);
     chip->a = chip->mem[address];
     printf("MOV A, M: SET REGISTER A TO VALUE AT ADDRESS: 0x%04X (0x%04X)", address, chip->a);
+    if (address >= 0x2400 && address <= 0x3fff) {
+        exit(1);
+    }
     return 7;
 }
 
 // ANA A
 int handle0xa7(Chip* chip, u_int8_t* op) {
     chip->a &= chip->a;
-    printf("ANA A: SETS REGISTER A TO A LOGICAL AND A = A & A (0x%04X)", chip->a);
+    // printf("ANA A: SETS REGISTER A TO A LOGICAL AND A = A & A (0x%04X)", chip->a);
     setFlags8Bits(chip, chip->a);
     chip->flags.carry = 0;
     return 4;
@@ -540,7 +574,7 @@ int handle0xa7(Chip* chip, u_int8_t* op) {
 // XRA A
 int handle0xaf(Chip* chip, u_int8_t* op) {
     chip->a ^= chip->a;
-    printf("XRA A: SETS REGISTER A To  A = A ^ A (0x%04X)", chip->a);
+    // printf("XRA A: SETS REGISTER A To  A = A ^ A (0x%04X)", chip->a);
     setFlags8Bits(chip, chip->a);
     chip->flags.carry = 0;
     return 4;
@@ -550,17 +584,17 @@ int handle0xc1(Chip* chip, u_int8_t* op) {
     chip->c = chip->mem[chip->sp];
     chip->b = chip->mem[chip->sp + 1];
     chip->sp += 2;
-    printf("POP B: POP FROM STACK. REGISTER C SET TO 0x%04X. REGISTER B SET TO 0x%04X. STACK POINTER -= 2", chip->c, chip->b);
+    // printf("POP B: POP FROM STACK. REGISTER C SET TO 0x%04X. REGISTER B SET TO 0x%04X. STACK POINTER -= 2", chip->c, chip->b);
     return 10;
 }
 // JNZ a16
 int handle0xc2(Chip* chip, u_int8_t* op) {
     if (chip->flags.zero == 0) {
         chip->pc = (op[2] << 8) | op[1];
-        printf("JNZ a16: SINCE THE ZERO FLAG IS NOT SET, we jump to address: 0x%04X", chip->pc);
+        // printf("JNZ a16: SINCE THE ZERO FLAG IS NOT SET, we jump to address: 0x%04X", chip->pc);
         chip->pc -= 1;
     } else {
-        printf("JNZ a16: ZERO FLAG IS SET, NO JUMP");
+        // printf("JNZ a16: ZERO FLAG IS SET, NO JUMP");
         chip->pc += 2;
     }
     return 10;
@@ -569,7 +603,7 @@ int handle0xc2(Chip* chip, u_int8_t* op) {
 // JMP a16
 int handle0xc3(Chip* chip, u_int8_t* op) {
     chip->pc = (op[2] << 8) | op[1];
-    printf("JMP a16: JUMP TO ADDRESS 0x%04X", chip->pc);
+    // printf("JMP a16: JUMP TO ADDRESS 0x%04X", chip->pc);
     chip->pc -= 1;
     return 10;
 }
@@ -578,7 +612,7 @@ int handle0xc3(Chip* chip, u_int8_t* op) {
 int handle0xc5(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 1] = chip->b;
     chip->mem[chip->sp - 2] = chip->c;
-    printf("PUSH B: SAVE VALUE AT REGISTER B(0x%04X) and VALUE AT REGISTER C(0x%04X) onto STACK", chip->b, chip->c);
+    // printf("PUSH B: SAVE VALUE AT REGISTER B(0x%04X) and VALUE AT REGISTER C(0x%04X) onto STACK", chip->b, chip->c);
     chip->sp -= 2;
     return 11;
 }
@@ -586,7 +620,7 @@ int handle0xc5(Chip* chip, u_int8_t* op) {
 int handle0xc6(Chip* chip, u_int8_t* op) {
     u_int16_t carryCheck = (u_int16_t) chip->a + (u_int16_t) op[1];
     chip->a += op[1];
-    printf("ADI D8: ADD IMMEDIATE 0x%04X to Register A to get", chip->a);
+    // printf("ADI D8: ADD IMMEDIATE 0x%04X to Register A to get", chip->a);
     chip->pc += 1;
     setFlags8Bits(chip, chip->a);
     chip->flags.carry = carryCheck > (pow(2, 8) - 1);
@@ -595,7 +629,7 @@ int handle0xc6(Chip* chip, u_int8_t* op) {
 // RET
 int handle0xc9(Chip* chip, u_int8_t* op) {
     chip->pc = (chip->mem[chip->sp + 1] << 8) |chip->mem[chip->sp];
-    printf("RET: RETURN TO ADDRESS 0x%04X", chip->pc);
+    // printf("RET: RETURN TO ADDRESS 0x%04X", chip->pc);
     chip->sp += 2;
     return 10;
 }
@@ -606,7 +640,7 @@ int handle0xcd(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 2] = saveOnStack & 0x00ff;
     chip->pc = (op[2] << 8) | op[1];
     chip->sp -= 2;
-    printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
+    // printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
     chip->pc -= 1;
     return 17;
 }
@@ -623,15 +657,16 @@ int handle0xd1(Chip* chip, u_int8_t* op) {
     chip->e = chip->mem[chip->sp];
     chip->d = chip->mem[chip->sp + 1];
     chip->sp += 2;
-    printf("POP D: POP FROM STACK. REGISTER E SET TO 0x%04X. REGISTER D SET TO 0x%04X. STACK POINTER -= 2", chip->e, chip->d);
+    // printf("POP D: POP FROM STACK. REGISTER E SET TO 0x%04X. REGISTER D SET TO 0x%04X. STACK POINTER -= 2", chip->e, chip->d);
     return 10;
 }
 
 // OUT
 int handle0xd3(Chip* chip, u_int8_t* op) {
     deviceOut(chip, op[1], chip->a);
-    printf("OUT: Write value in REGISTER A: 0x%04X to I/O Port %d", chip->a, op[1]);
+    // printf("OUT: Write value in REGISTER A: 0x%04X to Output Port %d", chip->a, op[1]);
     chip->pc += 1;
+    
     return 10;
 }
 
@@ -639,7 +674,7 @@ int handle0xd3(Chip* chip, u_int8_t* op) {
 int handle0xd5(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 1] = chip->d;
     chip->mem[chip->sp - 2] = chip->e;
-    printf("PUSH D: SAVE VALUE AT REGISTER D(0x%04X) and VALUE AT REGISTER E(0x%04X) onto STACK", chip->d, chip->e);
+    // printf("PUSH D: SAVE VALUE AT REGISTER D(0x%04X) and VALUE AT REGISTER E(0x%04X) onto STACK", chip->d, chip->e);
     chip->sp -= 2;
     return 11;
 }
@@ -656,8 +691,9 @@ int handle0xd7(Chip* chip, u_int8_t* op) {
 // IN
 int handle0xdb(Chip* chip, u_int8_t* op) {
     deviceIn(chip, op[1]);
-    printf("IN: Data from Port %d written to Register A: 0x%04X", op[1], chip->a);
+    // printf("IN: Data from Port %d written to Register A: 0x%04X", op[1], chip->a);
     chip->pc += 1;
+    exit(1);
     return 10;
 
 }
@@ -666,7 +702,7 @@ int handle0xe1(Chip* chip, u_int8_t* op) {
     chip->l = chip->mem[chip->sp];
     chip->h = chip->mem[chip->sp + 1];
     chip->sp += 2;
-    printf("POP H: POP FROM STACK. REGISTER L SET TO 0x%04X. REGISTER H SET TO 0x%04X. STACK POINTER -= 2", chip->l, chip->h);
+    // printf("POP H: POP FROM STACK. REGISTER L SET TO 0x%04X. REGISTER H SET TO 0x%04X. STACK POINTER -= 2", chip->l, chip->h);
     return 10;
 }
 
@@ -674,7 +710,7 @@ int handle0xe1(Chip* chip, u_int8_t* op) {
 int handle0xe5(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 1] = chip->h;
     chip->mem[chip->sp - 2] = chip->l;
-    printf("PUSH H: SAVE VALUE AT REGISTER H(0x%04X) and VALUE AT REGISTER L(0x%04X) onto STACK", chip->h, chip->l);
+    // printf("PUSH H: SAVE VALUE AT REGISTER H(0x%04X) and VALUE AT REGISTER L(0x%04X) onto STACK", chip->h, chip->l);
     chip->sp -= 2;
     return 11;
 }
@@ -683,7 +719,7 @@ int handle0xe6(Chip* chip, u_int8_t* op) {
     chip->a &= op[1];
     chip->flags.carry = 0;
     setFlags8Bits(chip, chip->a);
-    printf("ANI d8: A = A & immediate(0x%04X)", chip->a);
+    // printf("ANI d8: A = A & immediate(0x%04X)", chip->a);
     return 7;
 }
 // XCHG
@@ -694,7 +730,7 @@ int handle0xeb(Chip* chip, u_int8_t* op) {
     chip->h = tempD;
     chip->e = chip->l;
     chip->l = tempE;
-    printf("XCHG: SWAP THE VALUES OF HL AND DE. HL = (0x%04X). DE = (0x%04X).", getHL(chip), getDE(chip));
+    // printf("XCHG: SWAP THE VALUES OF HL AND DE. HL = (0x%04X). DE = (0x%04X).", getHL(chip), getDE(chip));
     return 5;
 
 }
@@ -725,7 +761,8 @@ int handle0xf5(Chip* chip, u_int8_t* op) {
 // EI
 int handle0xfb(Chip* chip, u_int8_t* op) {
     chip->flags.interrupt_enabled = 1;
-    printf("INTERRUPT ENABLE FlAG SET TO 1");
+    exit(1);
+    // printf("INTERRUPT ENABLE FlAG SET TO 1");
     return 4;
 }
 
@@ -735,7 +772,7 @@ int handle0xfe(Chip* chip, u_int8_t* op) {
     chip->flags.carry = 0;
     setFlags8Bits(chip, res);
     chip->pc += 1;
-    printf("SUBTRACT IMMEDIATE FROM REGISTER A(0x%04X) AND USE RESULT TO SET FLAGS", res);
+    // printf("SUBTRACT IMMEDIATE FROM REGISTER A(0x%04X) AND USE RESULT TO SET FLAGS", res);
     return 7;
 }
 

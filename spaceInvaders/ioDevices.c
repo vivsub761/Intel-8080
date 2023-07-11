@@ -24,7 +24,7 @@ u_int8_t deviceIn(Chip* chip, u_int8_t port) {
 
 void deviceOut(Chip* chip, u_int8_t port, u_int8_t data) {
     switch(port) {
-        case 2: chip->devices->shiftRegResOffset = data;
+        case 2: chip->devices->shiftRegResOffset = data & 0x7;
         case 4: chip->devices->shiftRegister = (data << 8) | (chip->devices->shiftRegister >> 8);
 
     }
