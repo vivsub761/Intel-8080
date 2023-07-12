@@ -188,8 +188,7 @@ void eventHandler(Chip* chip) {
 }
 
 
-const int width = 64;
-const int height = 32;
+
 sdl* InitializeSDL() {
 	sdl* sdl = malloc(sizeof(sdl));
 	SDL_Init( SDL_INIT_EVERYTHING );
