@@ -7,7 +7,7 @@
 
 // NOP
 int handle0x00(Chip* chip, u_int8_t* op) {
-    printf("NO OP");
+    exit(1);
     return 4;
 }
 // LXI B,d16
@@ -46,7 +46,7 @@ int handle0x04(Chip* chip, u_int8_t* op) {
 // DCR B
 // decrement B register
 int handle0x05(Chip* chip, u_int8_t* op) {
-    // printf("DCR B: DECREMENT B REGISTER TO 0x%04X", chip->b - 1);
+    printf("DCR B: DECREMENT B REGISTER TO 0x%04X", chip->b - 1);
     chip->b -= 1;
     setFlags8Bits(chip, chip->b);
     return 5;
@@ -54,7 +54,7 @@ int handle0x05(Chip* chip, u_int8_t* op) {
 // MVI B,d8
 // set register b to immediate
 int handle0x06(Chip* chip, u_int8_t* op) {
-    // printf("MVI B,d8: SET REGSITER B TO 0x%04X", op[1]);
+    printf("MVI B,d8: SET REGSITER B TO 0x%04X", op[1]);
     chip->b = op[1];
     chip->pc += 1;
     return 7;
@@ -82,7 +82,7 @@ int handle0x09(Chip* chip, u_int8_t* op) {
     u_int32_t carryCheck = hl + bc;
     u_int16_t res = hl + bc;
     setHandLtoHL(chip, res);
-    // printf("DAD B: The value of the HL register pair: 0x%04X is added to the value of the BC Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, bc, res);
+    printf("DAD B: The value of the HL register pair: 0x%04X is added to the value of the BC Regsiter PAIR: 0x%04X and the result 0x%04X is put into the HL register pair", hl, bc, res);
     chip->flags.carry = carryCheck > (pow(2, 16) - 1);
     return 10;
 }
@@ -237,7 +237,7 @@ int handle0x1a(Chip* chip, u_int8_t* op) {
 // DCX D
 int handle0x1b(Chip* chip, u_int8_t* op) {
     u_int16_t de = getDE(chip) - 1;
-    setBandCtoBC(chip, de);
+    setDandEtoDE(chip, de);
     printf("DCX D: Decrement BC register pair to 0x%04X", getDE(chip));
     return 5;
 }
@@ -288,7 +288,7 @@ int handle0x21(Chip* chip, u_int8_t* op) {
     chip->h = op[2];
     chip->l = op[1];
     chip->pc += 2;
-    // printf("LXI H,d16: Load 16 bit immediate into HL register pair. Register H = 0x%04X, Register L = 0x%04X", op[2], op[1]);
+    printf("LXI H,d16: Load 16 bit immediate into HL register pair. Register H = 0x%04X, Register L = 0x%04X", op[2], op[1]);
     return 10;
 }
 
@@ -298,7 +298,8 @@ int handle0x22(Chip* chip, u_int8_t* op) {
     u_int16_t address = (op[2] << 8) | op[1];
     chip->mem[address] = chip->l;
     chip->mem[address + 1] = chip->h;
-    printf("SAVING REGISTER L: 0x%04X at address 0x%04X and REGISTER H: 0x%04X at address 0x%04X", chip->l, address, chip->h, address + 1);
+    printf("SHLD: SAVING REGISTER L: 0x%04X at address 0x%04X and REGISTER H: 0x%04X at address 0x%04X", chip->l, address, chip->h, address + 1);
+    chip->pc += 2;
     return 16;
 }
 
@@ -366,7 +367,7 @@ int handle0x2a(Chip* chip, u_int8_t* op) {
     u_int16_t address = (op[2] << 8) | op[1];
     chip->l = chip->mem[address];
     chip->h = chip->mem[address + 1];
-    printf("REGISTER L: 0x%04X SET TO value at address 0x%04X, REGISTER H: 0x%04X SET TO value at address 0x%04X", chip->l, address, chip->h, address + 1);
+    printf("LHLD: REGISTER L: 0x%04X SET TO value at address 0x%04X, REGISTER H: 0x%04X SET TO value at address 0x%04X", chip->l, address, chip->h, address + 1);
     chip->pc += 2;
     return 16;
 }   
@@ -376,7 +377,7 @@ int handle0x2a(Chip* chip, u_int8_t* op) {
 int handle0x2b(Chip* chip, u_int8_t* op) {
     u_int16_t hl = getHL(chip);
     hl -= 1;
-    setBandCtoBC(chip, hl);
+    setHandLtoHL(chip, hl);
     printf("DCX H: Decrement HL register pair to 0x%04X", getHL(chip));
     return 5;
 }
@@ -421,7 +422,7 @@ int handle0x30(Chip* chip, u_int8_t* op) {
 // LXI SP,d16
 int handle0x31(Chip* chip, u_int8_t* op) {
     chip->sp = (op[2] << 8) | op[1];
-    // printf("LXI SP,d16: change stack pointer to immediate 0x%04X", chip->sp);
+    printf("LXI SP,d16: change stack pointer to immediate 0x%04X", chip->sp);
     chip->pc += 2;
     return 10;
 }
@@ -1445,7 +1446,7 @@ int handle0xb8(Chip* chip, u_int8_t* op) {
     u_int8_t res = chip->a - chip->b;
     setFlags8Bits(chip, res);
     chip->flags.carry = 0;
-    printf("CMP B: SUBTRACT REGISTER B FROM A AND SET FLAGS BASED ON RESULT");
+    printf("CMP B: SUBTRACT REGISTER B(0x%04X) FROM A(0x%04X) AND SET FLAGS BASED ON RESULT", chip->b, chip->a);
 }
 
 int handle0xb9(Chip* chip, u_int8_t* op) {
@@ -1459,7 +1460,7 @@ int handle0xba(Chip* chip, u_int8_t* op) {
     u_int8_t res = chip->a - chip->d;
     setFlags8Bits(chip, res);
     chip->flags.carry = 0;
-    printf("CMP D: SUBTRACT REGISTER D FROM A AND SET FLAGS BASED ON RESULT");
+    printf("CMP D: SUBTRACT REGISTER D(0x%04X) FROM A(0x%04X) AND SET FLAGS BASED ON RESULT", chip->d, chip->a);
 }
 
 int handle0xbb(Chip* chip, u_int8_t* op) {
@@ -1473,7 +1474,7 @@ int handle0xbc(Chip* chip, u_int8_t* op) {
     u_int8_t res = chip->a - chip->h;
     setFlags8Bits(chip, res);
     chip->flags.carry = 0;
-    printf("CMP H: SUBTRACT REGISTER H FROM A AND SET FLAGS BASED ON RESULT");
+    printf("CMP H: SUBTRACT REGISTER H(0x%04X) FROM A(0x%04X) AND SET FLAGS BASED ON RESULT", chip->h, chip->a);
 }
 
 int handle0xbd(Chip* chip, u_int8_t* op) {
@@ -1504,6 +1505,7 @@ int handle0xc0(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp + 1] << 8);
         chip->sp += 2;
         printf("ZERO FLAG NOT SET, PC Popped from stack: 0x%04X", chip->pc);
+        chip->pc -= 1;
         return 2;
     }
     printf("ZERO FLAG SET, NOTHING HAPPENED!");
@@ -1523,6 +1525,7 @@ int handle0xc2(Chip* chip, u_int8_t* op) {
     if (chip->flags.zero == 0) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JNZ a16: SINCE THE ZERO FLAG IS NOT SET, we jump to address: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JNZ a16: ZERO FLAG IS SET, NO JUMP");
         chip->pc += 2;
@@ -1534,7 +1537,7 @@ int handle0xc2(Chip* chip, u_int8_t* op) {
 int handle0xc3(Chip* chip, u_int8_t* op) {
     chip->pc = (op[2] << 8) | op[1];
     printf("JMP a16: JUMP TO ADDRESS 0x%04X", chip->pc);
-    // chip->pc -= 1;
+    chip->pc -= 1;
     return 10;
 }
 
@@ -1546,6 +1549,7 @@ int handle0xc4(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CNZ a16: ZERO FLAG NOT SET, PC PUSHED ON STACK, NEW PC: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CNZ a16: ZErO FLAG SET, NOTHING HAPPENS");
@@ -1587,6 +1591,7 @@ int handle0xc8(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp + 1] << 8);
         chip->sp += 2;
         printf("CZ: ZERO FLAG SET, SO POP PC OFF OF STACK. NEW PC: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("CZ: ZERO FLAG NOT SET, NO JUMP");
     }
@@ -1605,6 +1610,7 @@ int handle0xca(Chip* chip, u_int8_t* op) {
     if (chip->flags.zero == 1) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JZ a16: Zero flag set, jump to 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JZ a16: zero flag not set, no jump");
         chip->pc += 2;
@@ -1623,6 +1629,7 @@ int handle0xcc(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CZ a16: ZERO FLAG NOT SET, PC PUSHED ON STACK, NEW PC: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CZ a16: ZERO FLAG SET, NOTHING HAPPENS");
@@ -1631,14 +1638,37 @@ int handle0xcc(Chip* chip, u_int8_t* op) {
 }
 // CALL
 int handle0xcd(Chip* chip, u_int8_t* op) {
-    u_int16_t saveOnStack = chip->pc + 3;
+    if (5 ==  ((op[2] << 8) | op[1]))    
+            {    
+                if (chip->c == 9)    
+                {    
+                    uint16_t offset = (chip->d<<8) | (chip->e);    
+                    char *str = &chip->mem[offset+3];  //skip the prefix bytes    
+                    while (*str != '$')    
+                        printf("%c", *str++);    
+                    printf("\n"); 
+                    exit(1);   
+                }    
+                else if (chip->c == 2)    
+                {    
+                    //saw this in the inspected code, never saw it called    
+                    printf ("print char routine called\n");    
+                }    
+            }    
+            else if (0 ==  ((op[2] << 8) | op[1]))    
+            {    
+                exit(0);    
+            }  else {
+                u_int16_t saveOnStack = chip->pc + 2;
     chip->mem[chip->sp - 1] = saveOnStack >> 8;
     chip->mem[chip->sp - 2] = saveOnStack & 0x00ff;
     chip->pc = (op[2] << 8) | op[1];
     chip->sp -= 2;
-    // printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
+    printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
     chip->pc -= 1;
     return 17;
+            }
+    
 }
 
 int handle0xce(Chip* chip, u_int8_t* op) {
@@ -1666,6 +1696,7 @@ int handle0xd0(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp+1]<<8);
 		chip->sp += 2;
         printf("RNC: CARRY FLAG IS NOT SET, SO POP NEW PC FROM STACK: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("RNC: CARRY FLAG IS SET, SO NOTHING HAPPENS");
     }
@@ -1685,6 +1716,7 @@ int handle0xd2(Chip* chip, u_int8_t* op) {
     if (chip->flags.carry == 0) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JNC a16: CARRY FLAG NOT SET, SO WE JUMP TO 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("JNC a16: CARRY FLAG SET, SO NOTHING HAPPENS");
@@ -1711,6 +1743,7 @@ int handle0xd4(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CNC a16: CARRY FLAG NOT SET SO PC SAVED ON STACK. NEW PC 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CNC a16: CARRY FLAG SET SO NOTHING HAPPENS");
@@ -1752,6 +1785,7 @@ int handle0xd8(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp + 1] << 8);
         chip->sp += 2;
          printf("RC: CARRY FLAG IS SET: POP NEW PC FROM STACK 0x%04X", chip->pc);
+         chip->pc -= 1;
     } else {
         printf("CARRY FLAG NOT SET, SO NOTHING HAPPENS");
     }
@@ -1766,6 +1800,7 @@ int handle0xda(Chip* chip, u_int8_t* op) {
     if (chip->flags.carry == 1) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JC a16: CARRY flag set, jump to 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JC a16: carry flag not set, no jump");
         chip->pc += 2;
@@ -1789,6 +1824,7 @@ int handle0xdc(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CC a16: CARRY FLAG NOT SET, PC PUSHED ON STACK, NEW PC: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CC a16: CARRY FLAG SET, NOTHING HAPPENS");
@@ -1824,6 +1860,7 @@ int handle0xe0(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp+1]<<8);
 		chip->sp += 2;
         printf("RPO: PARITY FLAG NOT SET, SO WE JUMP TO 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("RPO: PARITY FLAG SET, SO NOTHING HAPPENS");
     }
@@ -1842,6 +1879,7 @@ int handle0xe2(Chip* chip, u_int8_t* op) {
     if (chip->flags.parity == 0) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JPO a16: SINCE THE PARITY FLAG IS NOT SET, we jump to address: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JPO a16: PARITY FLAG IS SET, NO JUMP");
         chip->pc += 2;
@@ -1867,6 +1905,7 @@ int handle0xe4(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CPO a16: PARITY FLAG NOT SET SO PC SAVED ON STACK. NEW PC 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CPO a16: PARITY FLAG SET SO NOTHING HAPPENS");
@@ -1887,6 +1926,7 @@ int handle0xe6(Chip* chip, u_int8_t* op) {
     chip->flags.carry = 0;
     setFlags8Bits(chip, chip->a);
     printf("ANI d8: A = A & immediate(0x%04X)", chip->a);
+    printf("pARITY FLAG: 0x%04X\n", chip->flags.parity);
     chip->pc += 1;
     return 7;
 }
@@ -1906,6 +1946,7 @@ int handle0xe8(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp + 1] << 8);
         chip->sp += 2;
          printf("RPE: PARITY FLAG IS SET: POP NEW PC FROM STACK 0x%04X", chip->pc);
+         chip->pc -= 1;
     } else {
         printf("RPE: PARITY FLAG NOT SET, SO NOTHING HAPPENS");
     }
@@ -1915,13 +1956,15 @@ int handle0xe8(Chip* chip, u_int8_t* op) {
 int handle0xe9(Chip* chip, u_int8_t* op) {
     chip->pc = getHL(chip);
     printf("PCHL: SET PC TO HL REGISTER HL 0x%04X", chip->pc);
+    chip->pc -= 1;
     return 5;
 }
 
 int handle0xea(Chip* chip, u_int8_t* op) {
-    if (chip->flags.carry == 1) {
+    if (chip->flags.parity == 1) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JPE a16: PARITY flag set, jump to 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JPE a16: parity flag not set, no jump");
         chip->pc += 2;
@@ -1949,6 +1992,7 @@ int handle0xec(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CPE a16: PARITY FLAG NOT SET, PC PUSHED ON STACK, NEW PC: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CPE a16: PARITY FLAG SET, NOTHING HAPPENS");
@@ -1984,6 +2028,7 @@ int handle0xf0(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp+1]<<8);
 		chip->sp += 2;
         printf("RP: SIGN FLAG IS NOT SET, SO POP NEW PC FROM STACK: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("RP: SIGN FLAG IS SET, SO NOTHING HAPPENS");
     }
@@ -1997,6 +2042,8 @@ int handle0xf1(Chip* chip, u_int8_t* op) {
     chip->flags.parity = (0x04 == (psw & 0x04));
     chip->flags.sign = (0x02 == (psw & 0x02));
     chip->flags.zero = (0x01 == (psw & 0x01));
+    // *(unsigned char*) &chip->flags = chip->mem[chip->sp];
+    printf("POP PSW");
     chip->sp += 2;
     return 10;
 }
@@ -2005,6 +2052,7 @@ int handle0xf2(Chip* chip, u_int8_t* op) {
     if (chip->flags.sign == 0) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JP a16: SINCE THE SIGN FLAG IS NOT SET, we jump to address: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JP a16: SIGN FLAG IS SET, NO JUMP");
         chip->pc += 2;
@@ -2013,7 +2061,7 @@ int handle0xf2(Chip* chip, u_int8_t* op) {
 }
 
 int handle0xf3(Chip* chip, u_int8_t* op) {
-    chip->flags.interrupt_enabled = 0;
+    chip->interrupt_enabled = 0;
     printf("DI: Interrupts toggled off");
 }
 
@@ -2025,6 +2073,7 @@ int handle0xf4(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CP a16: SIGN FLAG NOT SET SO PC SAVED ON STACK. NEW PC 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CP a16: SIGN FLAG SET SO NOTHING HAPPENS");
@@ -2035,13 +2084,17 @@ int handle0xf4(Chip* chip, u_int8_t* op) {
 int handle0xf5(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 1] = chip->a;
     u_int8_t psw = 2;
-    psw |= chip->flags.carry;
-    psw |= (chip->flags.parity << 2);
-    psw |= (chip->flags.auxCarry << 4);
-    psw |= (chip->flags.zero << 6);
+    // psw = 00000010
+    psw |= chip->flags.carry; //psw = 00000011
+    psw |= (chip->flags.parity << 2);//psw = 00000111
+    psw |= (chip->flags.auxCarry << 4);//psw = 00001111
+    psw |= (chip->flags.zero << 6); //psw = 00000111
     psw |= (chip->flags.sign << 7);
-    chip->mem[chip->sp - 2] = psw;
+    printf("PUSH PSW");
+    chip->mem[chip->sp - 2] = *(unsigned char*)&chip->flags;
     chip->sp -= 2;
+
+
     return 11;
 }
 
@@ -2068,6 +2121,7 @@ int handle0xf8(Chip* chip, u_int8_t* op) {
         chip->pc = chip->mem[chip->sp] | (chip->mem[chip->sp + 1] << 8);
         chip->sp += 2;
          printf("RM: SIGN FLAG IS SET: POP NEW PC FROM STACK 0x%04X", chip->pc);
+         chip->pc -= 1;
     } else {
         printf("RM: SIGN FLAG NOT SET, SO NOTHING HAPPENS");
     }
@@ -2076,13 +2130,14 @@ int handle0xf8(Chip* chip, u_int8_t* op) {
 
 int handle0xf9(Chip* chip, u_int8_t* op) {
     chip->sp = getHL(chip);
-    printf("SET STACK POINTER TO HL: 0x%04X", chip->sp);
+    printf("SPHL: SET STACK POINTER TO HL: 0x%04X", chip->sp);
 }
 
 int handle0xfa(Chip* chip, u_int8_t* op) {
     if (chip->flags.sign == 1) {
         chip->pc = (op[2] << 8) | op[1];
         printf("JM a16: sign flag set, jump to 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         printf("JM a16: sign flag not set, no jump");
         chip->pc += 2;
@@ -2091,7 +2146,7 @@ int handle0xfa(Chip* chip, u_int8_t* op) {
 }
 // EI
 int handle0xfb(Chip* chip, u_int8_t* op) {
-    chip->flags.interrupt_enabled = 1;
+    chip->interrupt_enabled = 1;
     exit(1);
     printf("EI: INTERRUPT ENABLE FlAG SET TO 1");
     return 4;
@@ -2105,6 +2160,7 @@ int handle0xfc(Chip* chip, u_int8_t* op) {
         chip->sp -= 2;
         chip->pc = (op[2] << 8) | op[1];
         printf("CM a16: SIGN FLAG NOT SET, PC PUSHED ON STACK, NEW PC: 0x%04X", chip->pc);
+        chip->pc -= 1;
     } else {
         chip->pc += 2;
         printf("CM a16: SIGNFLAG SET, NOTHING HAPPENS");

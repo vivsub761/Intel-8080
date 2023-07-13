@@ -14,12 +14,11 @@ typedef enum {
 } state;
 
 typedef struct flags {
-    u_int8_t zero;
-    u_int8_t sign;
-    u_int8_t parity;
-    u_int8_t carry;
-    u_int8_t auxCarry;
-    u_int8_t interrupt_enabled;
+    u_int8_t zero: 1;
+    u_int8_t sign: 1;
+    u_int8_t parity: 1;
+    u_int8_t carry: 1;
+    u_int8_t auxCarry: 1;
 } flags;
 
 typedef struct {
@@ -32,6 +31,7 @@ typedef struct {
     u_int8_t l;
     u_int16_t sp;    
     u_int16_t pc; 
+    u_int8_t interrupt_enabled;
     u_int8_t mem[0x4000];
     u_int8_t zpad: 3;
     state state;
