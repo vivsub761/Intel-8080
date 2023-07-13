@@ -223,26 +223,25 @@ int main (int argc, char**argv) {
 	sdl* sdl = InitializeSDL();
 	int summed = 0;
 	
-	// SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
-    // SDL_RenderClear(sdl->renderer);
+	SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
+    SDL_RenderClear(sdl->renderer);
 	int i = 1;
-	// opCodeTable[0x02](chip, chip->mem + chip->pc);
-	// while (chip->state != IDLE) {
-	// 	eventHandler(chip);
-	// 	if (chip->state == PAUSED) {
-	// 		continue;
+	while (chip->state != IDLE) {
+		eventHandler(chip);
+		if (chip->state == PAUSED) {
+			continue;
 			
-	// 	}
-	// 	u_int8_t* op = chip->mem + chip->pc;
-	// 	printf("INSTRUCTION NUMBER: %d \n", i++);
-	// 	printf("PC: 0x%04X, ", chip->pc);
-	// 	printf("OPCODE: 0x%02X: ", op[0]);
-	// 	opCodeTable[op[0]](chip, op);
-	// 	printf("\n");
-	// 	chip->pc += 1;
-	// 	emulate(chip);
-	// 	renderGraphics(chip, sdl);
-	// }
+		}
+		u_int8_t* op = chip->mem + chip->pc;
+		printf("INSTRUCTION NUMBER: %d \n", i++);
+		printf("PC: 0x%04X, ", chip->pc);
+		printf("OPCODE: 0x%02X: ", op[0]);
+		opCodeTable[op[0]](chip, op);
+		printf("\n");
+		chip->pc += 1;
+		// emulate(chip);
+		renderGraphics(chip, sdl);
+	}
 	// printf("\n\nSUMMED BEFORE: %d\n\n", summed);
 	// int summed2 = 0;
 	// for (int i = 0x2400; i < 0x3fff + 1; i++) {
