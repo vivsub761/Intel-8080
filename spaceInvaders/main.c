@@ -311,7 +311,7 @@ float interrupt(Chip* chip, u_int8_t* op, u_int8_t opCode) {
 void emulate(Chip* chip) {
     int cycles = 0;
 	float lastInterrupt = 0;
-	while (cycles < 33332) {
+	while (cycles < 16666) {
 		u_int8_t* op = chip->mem + chip->pc;
 		// printf("PC: 0x%04X, ", chip->pc);
 		// printf("OPCODE: 0x%02X: ", op[0]);
@@ -322,7 +322,9 @@ void emulate(Chip* chip) {
 			lastInterrupt = timing == -1 ? lastInterrupt : timing;
 		}
 		printf("\n");
-		chip->pc += 1;
+		if (op[0] != 0xc7) {
+			chip->pc += 1;
+		}
 	}
 }
 
@@ -400,36 +402,78 @@ sdl* InitializeSDL() {
     }
 	return sdl;
 }
-
+SDL_Color calculateOverlay(uint8_t x, uint8_t y) {
+	SDL_Color WHITE = {255,255,255};
+	SDL_Color RED = {255,  0,  0};
+	SDL_Color GREEN = {  0,255,  0};
+    if (y >= 224) { 
+		return WHITE; 
+	} else if (y >= 192) { 
+		return RED; 
+	} else if (y >= 82) { 
+		return WHITE; 
+	} else if (y >= 26) { 
+		return GREEN; 
+	} else if (x <= 16) { 
+		return WHITE; 
+	} else if (x <= 134) { 
+		return GREEN; 
+	} else {
+		return WHITE;
+	}
+}
 
 void renderGraphics(Chip* chip, sdl* sdl) {
-	
+	SDL_Color pixelColor;
+    SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 0);
+    SDL_RenderClear(sdl->renderer);
+
+    // Draw the pixels from the memory locations 0x2400 - 0x3fff
+    // into the window screen
+	uint16_t offset = 0x2400;
+    for(uint16_t r=0; r<224; r++){
+    	for(int16_t c=0; c<256; c++){
+        	uint16_t Yoffset = 0x20 * r;
+        	uint16_t Xoffset = (c >> 3);
+        	uint16_t current_byte = offset + Xoffset + Yoffset;
+        	uint8_t current_bit = (c % 8);
+
+        	bool thisPixel = (chip->mem[current_byte]& (1 << current_bit)) >> current_bit;
+			SDL_Color overlay = calculateOverlay(r, c);
+			SDL_SetRenderDrawColor(sdl->renderer, thisPixel ? overlay.r : 0, thisPixel ? overlay.g : 0, thisPixel ? overlay.b : 0, thisPixel ? 255 : 0);
+        	SDL_RenderDrawPoint(sdl->renderer, r, 255 - c);
+    	}
+    }
+    SDL_RenderPresent(sdl->renderer);
 }
 
 
 int main (int argc, char**argv) {
     Chip* chip = InitializeChip();
 	chip->devices = InitializeDevices();
-	// if (!readFileIntoChip("invaders.h", chip, 0) || !readFileIntoChip("invaders.g", chip, 0x800) 
-	// 	|| !readFileIntoChip("invaders.f", chip, 0x1000) || !readFileIntoChip("invaders.e", chip, 0x1800)) {
-	// 	printf("Unable to Read Space invaders file into chip");
-	// 	return 0;
-	// }
-	readFileIntoChip("cpudiag.bin", chip, 0x100);
-	chip->pc = 0x100;
+	if (!readFileIntoChip("invaders.h", chip, 0) || !readFileIntoChip("invaders.g", chip, 0x800) 
+		|| !readFileIntoChip("invaders.f", chip, 0x1000) || !readFileIntoChip("invaders.e", chip, 0x1800)) {
+		printf("Unable to Read Space invaders file into chip");
+		return 0;
+	}
+	// readFileIntoChip("cpudiag.bin", chip, 0x100);
+	// chip->pc = 0x100;
 	InitializeOpCodeTable();
 	sdl* sdl = InitializeSDL();
 	int summed = 0;
-	chip->mem[368] = 0x7;
-	chip->mem[0x59c] = 0xc3;
-	chip->mem[0x59d] = 0xc2;
-	chip->mem[0x59e] = 0x05;
+	// chip->mem[368] = 0x7;
+	// chip->mem[0x59c] = 0xc3;
+	// chip->mem[0x59d] = 0xc2;
+	// chip->mem[0x59e] = 0x05;
 	
 	SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
     SDL_RenderClear(sdl->renderer);
 	int i = 1;
-	// printf("NEW PC: 0x%02X\n", (chip->mem[0x01B2] << 8) | chip->mem[0x01B1]);
-	// printf("NEW OPCODE: 0x%02X\n", chip->mem[0x01B6]);
+
+	for (int i = 0x2400; i < 0x3fff + 1; i++) {
+		summed += chip->mem[i];
+	}
+	
 	while (chip->state != IDLE) {
 		eventHandler(chip);
 		if (chip->state == PAUSED) {
@@ -438,51 +482,23 @@ int main (int argc, char**argv) {
 		}
 		u_int8_t* op = chip->mem + chip->pc;
 		// printf("INSTRUCTION NUMBER: %d \n", i++);
-		printf("PC: 0x%04X, ", chip->pc);
+		// printf("PC: 0x%04X, ", chip->pc);
 		// printf("OPCODE: 0x%02X: ", op[0]);
-		opCodeTable[op[0]](chip, op);
-		printf("\n\n");
-		chip->pc += 1;
+
+		// opCodeTable[op[0]](chip, op);
+		// printf("\n");
+		// chip->pc += 1;
 		// printf("ZERO FLAG: 0x%04X\n", chip->flags.zero);
-		// emulate(chip);
-		// renderGraphics(chip, sdl);
+		emulate(chip);
+		renderGraphics(chip, sdl);
 	}
-	// for (int i = 0; i < 20; i++) {
-	// 	u_int8_t* op = chip->mem + chip->pc;
-	// 	printf("PC: 0x%04X, ", chip->pc);
-	// 	printf("OPCODE: 0x%02X: ", op[0]);
-	// 	opCodeTable[op[0]](chip, op);
-	// 	printf("\n\n");
-	// 	chip->pc += 1;
-	// }
-	// printf("\n\nSUMMED BEFORE: %d\n\n", summed);
-	// int summed2 = 0;
-	// for (int i = 0x2400; i < 0x3fff + 1; i++) {
-	// 	summed2 += chip->mem[i];
-	// }
-	// printf("SUMMED AFTER: %d", summed2);
-	// for (int i = 1; i < 50; i++) {
-	// 	u_int8_t* op = chip->mem + chip->pc;
-	// 	printf("INSTRUCTION NUMBER: %d \n", i);
-	// 	printf("PC: 0x%04X, ", chip->pc);
-	// 	printf("OPCODE: 0x%02X: ", op[0]);
-	// 	opCodeTable[op[0]](chip, op);
-	// 	printf("\n");
-		// printf("A: 0x%04X\n", chip->a);
-		// printf("B: 0x%04X\n", chip->b);
-		// printf("C: 0x%04X\n", chip->c);
-		// printf("D: 0x%04X\n", chip->d);
-		// printf("E: 0x%04X\n", chip->e);
-		// printf("H: 0x%04X\n", chip->h);
-		// printf("L: 0x%04X\n", chip->l);
-		// printf("CARRY FLAG: 0x%04X\n", chip->flags.carry);
-		// printf("SIGN FLAG: 0x%04X\n", chip->flags.sign);
-		// printf("PARITY FLAG: 0x%04X\n", chip->flags.parity);
-		// printf("ZERO FLAG: 0x%04X\n", chip->flags.zero);
+	printf("\n\nSUMMED BEFORE: %d\n\n", summed);
+	int summed2 = 0;
+	for (int i = 0x2400; i < 0x3fff + 1; i++) {
+		summed2 += chip->mem[i];
+	}
+	printf("SUMMED AFTER: %d", summed2);
 
-
-	// 	chip->pc += 1;
-	// }
 
 	// cleanup program
 	cleanup(chip, sdl);

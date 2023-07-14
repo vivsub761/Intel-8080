@@ -7,7 +7,7 @@
 
 // NOP
 int handle0x00(Chip* chip, u_int8_t* op) {
-    exit(1);
+    printf("NO OP");
     return 4;
 }
 // LXI B,d16
@@ -727,9 +727,6 @@ int handle0x5e(Chip* chip, u_int8_t* op) {
     u_int16_t address = getHL(chip);
     chip->e = chip->mem[address];
     printf("MOV E,M: SET REGISTER E(0x%04X) to value at address 0x%04X", chip->e, address);
-    if (address >= 0x2400 && address <= 0x3fff) {
-        exit(1);
-    }
     return 7;
 }
 
@@ -1638,28 +1635,7 @@ int handle0xcc(Chip* chip, u_int8_t* op) {
 }
 // CALL
 int handle0xcd(Chip* chip, u_int8_t* op) {
-    if (5 ==  ((op[2] << 8) | op[1]))    
-            {    
-                if (chip->c == 9)    
-                {    
-                    uint16_t offset = (chip->d<<8) | (chip->e);    
-                    char *str = &chip->mem[offset+3];  //skip the prefix bytes    
-                    while (*str != '$')    
-                        printf("%c", *str++);    
-                    printf("\n"); 
-                    exit(1);   
-                }    
-                else if (chip->c == 2)    
-                {    
-                    //saw this in the inspected code, never saw it called    
-                    printf ("print char routine called\n");    
-                }    
-            }    
-            else if (0 ==  ((op[2] << 8) | op[1]))    
-            {    
-                exit(0);    
-            }  else {
-                u_int16_t saveOnStack = chip->pc + 2;
+    u_int16_t saveOnStack = chip->pc + 2;
     chip->mem[chip->sp - 1] = saveOnStack >> 8;
     chip->mem[chip->sp - 2] = saveOnStack & 0x00ff;
     chip->pc = (op[2] << 8) | op[1];
@@ -1667,8 +1643,6 @@ int handle0xcd(Chip* chip, u_int8_t* op) {
     printf("CALL: CALL SUBROUTINE AT ADDRESS 0x%04X", chip->pc);
     chip->pc -= 1;
     return 17;
-            }
-    
 }
 
 int handle0xce(Chip* chip, u_int8_t* op) {
@@ -1688,6 +1662,7 @@ int handle0xcf(Chip* chip, u_int8_t* op) {
     printf("RST 1: SAVE PC ON STACK. NEW PC IS 0x0008");
     chip->sp -= 2;
     chip->pc = 8;
+    chip->pc -= 1;
     return 11;
 }
 
@@ -1728,7 +1703,11 @@ int handle0xd2(Chip* chip, u_int8_t* op) {
 // OUT
 int handle0xd3(Chip* chip, u_int8_t* op) {
     deviceOut(chip, op[1], chip->a);
+
     printf("OUT: Write value in REGISTER A: 0x%04X to Output Port %d", chip->a, op[1]);
+    if (op[1] == 4) {
+        exit(1);
+    }
     chip->pc += 1;
     
     return 10;
@@ -1777,6 +1756,7 @@ int handle0xd7(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 2] = chip->pc & 0x00ff;
     chip->sp -= 2;
     chip->pc = 16;
+    chip->pc -= 1;
     return 11;
 }
 
@@ -1851,7 +1831,8 @@ int handle0xdf(Chip* chip, u_int8_t* op) {
     chip->mem[chip->sp - 2] = saveOnStack & 0xff;
     chip->sp -= 2;
     chip->pc = 0x0018;
-    printf("RST 0: SAVED PC ON STACK, NEW PC: 0x0018");
+    printf("RST 3: SAVED PC ON STACK, NEW PC: 0x0018");
+    chip->pc -= 1;
     return 11;
 }
 
@@ -1938,6 +1919,7 @@ int handle0xe7(Chip* chip, u_int8_t* op) {
     chip->sp -= 2;
     chip->pc = 0x020;
     printf("RST 4: SAVED PC ON STACK, NEW PC: 0x0020");
+    chip->pc -= 1;
     return 11;
 }
 
@@ -2020,6 +2002,7 @@ int handle0xef(Chip* chip, u_int8_t* op) {
     chip->sp -= 2;
     chip->pc = 0x028;
     printf("RST 5: SAVED PC ON STACK, NEW PC: 0x0028");
+    chip->pc -= 1;
     return 11;
 }
 
@@ -2113,6 +2096,7 @@ int handle0xf7(Chip* chip, u_int8_t* op) {
     chip->sp -= 2;
     chip->pc = 0x030;
     printf("RST 6: SAVED PC ON STACK, NEW PC: 0x0030");
+    chip->pc -= 1;
     return 11;
 }
 
@@ -2147,7 +2131,6 @@ int handle0xfa(Chip* chip, u_int8_t* op) {
 // EI
 int handle0xfb(Chip* chip, u_int8_t* op) {
     chip->interrupt_enabled = 1;
-    exit(1);
     printf("EI: INTERRUPT ENABLE FlAG SET TO 1");
     return 4;
 }
@@ -2188,7 +2171,6 @@ int handle0xff(Chip* chip, u_int8_t* op) {
     chip->sp -= 2;
     chip->pc = 0x038;
     printf("RST 7: SAVED PC ON STACK, NEW PC: 0x0038");
+    chip->pc -= 1;
     return 11;
 }
-
-
