@@ -402,34 +402,11 @@ sdl* InitializeSDL() {
     }
 	return sdl;
 }
-SDL_Color calculateOverlay(uint8_t x, uint8_t y) {
-	SDL_Color WHITE = {255,255,255};
-	SDL_Color RED = {255,  0,  0};
-	SDL_Color GREEN = {  0,255,  0};
-    if (y >= 224) { 
-		return WHITE; 
-	} else if (y >= 192) { 
-		return RED; 
-	} else if (y >= 82) { 
-		return WHITE; 
-	} else if (y >= 26) { 
-		return GREEN; 
-	} else if (x <= 16) { 
-		return WHITE; 
-	} else if (x <= 134) { 
-		return GREEN; 
-	} else {
-		return WHITE;
-	}
-}
 
 void renderGraphics(Chip* chip, sdl* sdl) {
 	SDL_Color pixelColor;
     SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 0);
     SDL_RenderClear(sdl->renderer);
-
-    // Draw the pixels from the memory locations 0x2400 - 0x3fff
-    // into the window screen
 	uint16_t offset = 0x2400;
     for(uint16_t r=0; r<224; r++){
     	for(int16_t c=0; c<256; c++){
@@ -439,8 +416,7 @@ void renderGraphics(Chip* chip, sdl* sdl) {
         	uint8_t current_bit = (c % 8);
 
         	bool thisPixel = (chip->mem[current_byte]& (1 << current_bit)) >> current_bit;
-			SDL_Color overlay = calculateOverlay(r, c);
-			SDL_SetRenderDrawColor(sdl->renderer, thisPixel ? overlay.r : 0, thisPixel ? overlay.g : 0, thisPixel ? overlay.b : 0, thisPixel ? 255 : 0);
+			SDL_SetRenderDrawColor(sdl->renderer, thisPixel ? 255 : 0, thisPixel ? 255 : 0, thisPixel ? 255 : 0, thisPixel ? 255 : 0);
         	SDL_RenderDrawPoint(sdl->renderer, r, 255 - c);
     	}
     }
@@ -481,14 +457,6 @@ int main (int argc, char**argv) {
 			
 		}
 		u_int8_t* op = chip->mem + chip->pc;
-		// printf("INSTRUCTION NUMBER: %d \n", i++);
-		// printf("PC: 0x%04X, ", chip->pc);
-		// printf("OPCODE: 0x%02X: ", op[0]);
-
-		// opCodeTable[op[0]](chip, op);
-		// printf("\n");
-		// chip->pc += 1;
-		// printf("ZERO FLAG: 0x%04X\n", chip->flags.zero);
 		emulate(chip);
 		renderGraphics(chip, sdl);
 	}
