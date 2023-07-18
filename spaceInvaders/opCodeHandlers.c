@@ -1615,7 +1615,6 @@ int handle0xca(Chip* chip, u_int8_t* op) {
 }
 
 int handle0xcb(Chip* chip, u_int8_t* op) {
-    
 }
 
 int handle0xcc(Chip* chip, u_int8_t* op) {
@@ -1705,9 +1704,6 @@ int handle0xd3(Chip* chip, u_int8_t* op) {
     deviceOut(chip, op[1], chip->a);
 
     printf("OUT: Write value in REGISTER A: 0x%04X to Output Port %d", chip->a, op[1]);
-    if (op[1] == 4) {
-        exit(1);
-    }
     chip->pc += 1;
     
     return 10;

@@ -7,6 +7,7 @@
 
 static int (*opCodeTable[256])();
 
+// Opcode table allows us to easily dispatch instructions by mapping opcodes to functions 
 void InitializeOpCodeTable() {
 	opCodeTable[0x00] = handle0x00;
 	opCodeTable[0x01] = handle0x01;
@@ -266,6 +267,7 @@ void InitializeOpCodeTable() {
 	opCodeTable[0xff] = handle0xff;
 }
 
+// After emulation is finished, cleanup by freeing allocated memory and destroying appropriate objects
 void cleanup(Chip* chip, sdl* sdl) {
 	SDL_DestroyRenderer(sdl->renderer);
     SDL_DestroyWindow(sdl->window);
@@ -273,13 +275,14 @@ void cleanup(Chip* chip, sdl* sdl) {
     free(chip);
     free(sdl);
 }
-
+// Initialize chip object
 Chip* InitializeChip() {
 	Chip* chip = (Chip*) malloc(sizeof(Chip));
 	chip->state = RUNNING;
 	return chip;
 }
 
+// Read file into chip memory starting at a certain index in memory
 bool readFileIntoChip(char* filePath, Chip* chip, int start) {
 	FILE* file = fopen(filePath, "rb");
 	if (file == NULL) {
@@ -297,21 +300,22 @@ bool readFileIntoChip(char* filePath, Chip* chip, int start) {
 	fclose(file);
 	return true;
 }
+// perform interrupt if enabled
 float interrupt(Chip* chip, u_int8_t* op, u_int8_t opCode) {
 	if (chip->interrupt_enabled == 1) {
 		chip->interrupt_enabled = 0;
 		opCodeTable[opCode](chip, op);
-		chip->pc -= 1;
 		return time(NULL);
 	}
 	return -1;
 
 }
 
+// emulated for 33332 cycles, generate interrupts periodically
 void emulate(Chip* chip) {
     int cycles = 0;
 	float lastInterrupt = 0;
-	while (cycles < 16666) {
+	while (cycles < 33332) {
 		u_int8_t* op = chip->mem + chip->pc;
 		// printf("PC: 0x%04X, ", chip->pc);
 		// printf("OPCODE: 0x%02X: ", op[0]);
@@ -328,6 +332,7 @@ void emulate(Chip* chip) {
 	}
 }
 
+// handles keyboard presses
 void eventHandler(Chip* chip) {
 	SDL_Event windowEvent;
 	while (SDL_PollEvent(&windowEvent)) {
@@ -386,7 +391,7 @@ void eventHandler(Chip* chip) {
 }
 
 
-
+// Initializes sdl renderer and window
 sdl* InitializeSDL() {
 	sdl* sdl = malloc(sizeof(sdl));
 	SDL_Init( SDL_INIT_EVERYTHING );
@@ -403,6 +408,7 @@ sdl* InitializeSDL() {
 	return sdl;
 }
 
+// iterates through 0x2400-0x3fff(where the VRAM is stored) and renders it on the sdl screen
 void renderGraphics(Chip* chip, sdl* sdl) {
 	SDL_Color pixelColor;
     SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 0);
@@ -423,7 +429,7 @@ void renderGraphics(Chip* chip, sdl* sdl) {
     SDL_RenderPresent(sdl->renderer);
 }
 
-
+// Main function, create chip, read files into it, create sdl, run emulation loop
 int main (int argc, char**argv) {
     Chip* chip = InitializeChip();
 	chip->devices = InitializeDevices();
@@ -444,30 +450,15 @@ int main (int argc, char**argv) {
 	
 	SDL_SetRenderDrawColor(sdl->renderer, 0, 0, 0, 1);
     SDL_RenderClear(sdl->renderer);
-	int i = 1;
-
-	for (int i = 0x2400; i < 0x3fff + 1; i++) {
-		summed += chip->mem[i];
-	}
-	
 	while (chip->state != IDLE) {
 		eventHandler(chip);
 		if (chip->state == PAUSED) {
 			continue;
-			
 		}
 		u_int8_t* op = chip->mem + chip->pc;
 		emulate(chip);
 		renderGraphics(chip, sdl);
 	}
-	printf("\n\nSUMMED BEFORE: %d\n\n", summed);
-	int summed2 = 0;
-	for (int i = 0x2400; i < 0x3fff + 1; i++) {
-		summed2 += chip->mem[i];
-	}
-	printf("SUMMED AFTER: %d", summed2);
-
-
 	// cleanup program
 	cleanup(chip, sdl);
 
