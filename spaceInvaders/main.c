@@ -446,7 +446,7 @@ int main (int argc, char**argv) {
 		return 0;
 	}
 	// readFileIntoChip("cpudiag.bin", chip, 0x100);
-	// chip->pc = 0x100;
+	chip->pc = 0x100;
 	InitializeOpCodeTable();
 	sdl* sdl = InitializeSDL();
 	int summed = 0;
