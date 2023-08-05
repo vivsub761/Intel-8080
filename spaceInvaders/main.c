@@ -268,12 +268,19 @@ void InitializeOpCodeTable() {
 }
 
 // After emulation is finished, cleanup by freeing allocated memory and destroying appropriate objects
-void cleanup(Chip* chip, sdl* sdl) {
+bool cleanup(Chip* chip, sdl* sdl) {
 	SDL_DestroyRenderer(sdl->renderer);
+	if (SDL_GetError() == "invalid renderer") {
+		return false;
+	}
     SDL_DestroyWindow(sdl->window);
+	if (SDL_GetError() == "invalid window") {
+		return false;
+	}
     SDL_Quit();
     free(chip);
     free(sdl);
+	return true;
 }
 // Initialize chip object
 Chip* InitializeChip() {
@@ -460,7 +467,9 @@ int main (int argc, char**argv) {
 		renderGraphics(chip, sdl);
 	}
 	// cleanup program
-	cleanup(chip, sdl);
+	if (!cleanup(chip, sdl)) {
+		printf("UNABLE TO DESTROY SDL WINDOW AND/OR RENDERER");
+	}
 
 }
 	
