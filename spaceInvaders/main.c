@@ -290,7 +290,7 @@ Chip* InitializeChip() {
 }
 
 // Read file into chip memory starting at a certain index in memory
-bool readFileIntoChip(char* filePath, Chip* chip, int start) {
+bool readFileIntoChip(char* filePath, Chip* chip, int startIndex) {
 	FILE* file = fopen(filePath, "rb");
 	if (file == NULL) {
 		printf("File could not be found");
@@ -299,7 +299,7 @@ bool readFileIntoChip(char* filePath, Chip* chip, int start) {
 	fseek(file, 0, SEEK_END);
 	size_t fileSize = ftell(file);
 	rewind(file);
-	int bytesRead = fread(&chip->mem[start], 1, fileSize, file);
+	int bytesRead = fread(&chip->mem[startIndex], 1, fileSize, file);
 	if (bytesRead != fileSize) {
 		printf("Could not read the file fully\n");
 		return false;
@@ -428,8 +428,8 @@ void renderGraphics(Chip* chip, sdl* sdl) {
         	uint16_t current_byte = offset + Xoffset + Yoffset;
         	uint8_t current_bit = (c % 8);
 
-        	bool thisPixel = (chip->mem[current_byte]& (1 << current_bit)) >> current_bit;
-			SDL_SetRenderDrawColor(sdl->renderer, thisPixel ? 255 : 0, thisPixel ? 255 : 0, thisPixel ? 255 : 0, thisPixel ? 255 : 0);
+        	bool targetPixel = (chip->mem[current_byte]& (1 << current_bit)) >> current_bit;
+			SDL_SetRenderDrawColor(sdl->renderer, targetPixel ? 255 : 0, targetPixel ? 255 : 0, targetPixel ? 255 : 0, targetPixel ? 255 : 0);
         	SDL_RenderDrawPoint(sdl->renderer, r, 255 - c);
     	}
     }
@@ -446,7 +446,6 @@ int main (int argc, char**argv) {
 		return 0;
 	}
 	// readFileIntoChip("cpudiag.bin", chip, 0x100);
-	chip->pc = 0x100;
 	InitializeOpCodeTable();
 	sdl* sdl = InitializeSDL();
 	int summed = 0;
